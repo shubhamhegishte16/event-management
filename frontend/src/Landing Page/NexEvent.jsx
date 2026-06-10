@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import HeroImage from "../assets/HeroImage.png";
 
 
@@ -109,6 +110,48 @@ export default function App() {
       </li>
     ))}
   </ul>
+
+  <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+    <Link 
+      to="/login" 
+      style={{
+        fontSize: 14, 
+        fontWeight: 600,
+        color: "#44403c", 
+        textDecoration: "none",
+        transition: "color 0.2s",
+      }}
+      onMouseEnter={e => e.currentTarget.style.color = "#ea580c"}
+      onMouseLeave={e => e.currentTarget.style.color = "#44403c"}
+    >
+      Login
+    </Link>
+    <Link 
+      to="/signup" 
+      style={{
+        padding: "8px 18px",
+        background: "#9333ea",
+        color: "#fff",
+        fontSize: 14, 
+        fontWeight: 600,
+        border: "none", 
+        borderRadius: 8,
+        cursor: "pointer",
+        textDecoration: "none",
+        transition: "transform 0.2s, background-color 0.2s",
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = "#7e22ce";
+        e.currentTarget.style.transform = "translateY(-1px)";
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = "#9333ea";
+        e.currentTarget.style.transform = "translateY(0)";
+      }}
+    >
+      Sign Up
+    </Link>
+  </div>
 </nav>
 
 {/* ── CONTENT ── */ }

@@ -6,9 +6,10 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import startServer from "./src/config/db.js";
 import authRoutes from "./src/routes/auth.js";
 import ticketRoutes from "./src/routes/tickets.js";
-import eventRoutes from "./src/routes/events.js";  
+import eventRoutes from "./src/routes/eventRoute.js";  
 import organizerRoutes from "./src/routes/organizers.js";
 
 // Load environment variables
@@ -36,25 +37,8 @@ app.get("/", (req, res) => {
   res.send("Event Management System API is running...");
 });
 
-// Database connection & Server Startup
-const startServer = async () => {
-  try {
-    const mongoUri = process.env.MONGODB_URI;
-    if (!mongoUri) {
-      throw new Error("MONGODB_URI is not defined in .env file");
-    }
+await startServer();
 
-    console.log("Connecting to MongoDB Atlas...");
-    await mongoose.connect(mongoUri);
-    console.log("MongoDB connected successfully.");
-
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Database connection or Server startup error:", error);
-    process.exit(1);
-  }
-};
-
-startServer();
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

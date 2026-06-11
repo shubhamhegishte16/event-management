@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
+import axios from "axios";
+
+const PORT = 5000;
 
 const sidebarItems = [
   { id: "dashboard", label: "Dashboard" },
@@ -10,12 +13,6 @@ const sidebarItems = [
   { id: "gallery", label: "Gallery" },
   { id: "feedback", label: "Feedback & Reviews" },
   { id: "profile", label: "Profile & Settings" },
-];
-
-const mockEvents = [
-  { id: 1, title: "Tech Summit 2025", date: "2025-08-15", category: "Technology", registered: 120, seats: 200, status: "upcoming" },
-  { id: 2, title: "Design Workshop", date: "2025-07-20", category: "Design", registered: 45, seats: 50, status: "upcoming" },
-  { id: 3, title: "Startup Meetup", date: "2025-06-10", category: "Business", registered: 80, seats: 100, status: "completed" },
 ];
 
 const mockParticipants = [
@@ -60,6 +57,8 @@ function Badge({ status }) {
     completed: { bg: C.lightGray, color: C.midGray },
     confirmed: { bg: "#EDFAF3", color: "#1A7A4A" },
     pending: { bg: "#FFF8E1", color: "#A06000" },
+    approved: { bg: "#EDFAF3", color: "#1A7A4A" },
+    rejected: { bg: "#FEF2F2", color: "#C0392B" },
   };
   const s = map[status] || { bg: C.lightGray, color: C.midGray };
   return (
@@ -110,7 +109,7 @@ function Btn({ children, onClick, variant = "primary", type = "button", full }) 
   );
 }
 
-function Input({ label, value, onChange, type = "text", placeholder, required, as, rows }) {
+function Input({ label, value, onChange, type = "text", placeholder, required, as, rows, children }) {
   const inputStyle = {
     width: "100%",
     border: `1px solid ${C.border}`,
@@ -157,53 +156,118 @@ function Card({ children, style }) {
 }
 
 // ── DASHBOARD ──
-function Dashboard() {
+function Dashboard({ events = [] }) {
+  const eventCount = events && Array.isArray(events) ? events.length : 0;
+  
+  // Calculate statistics from actual events
+  const totalRegistrations = events.reduce((sum, event) => sum + (event.registered || event.availableTickets || 0), 0);
+  const totalSeats = events.reduce((sum, event) => sum + (event.seats || event.availableTickets || 0), 0);
+  const availableSeats = totalSeats - totalRegistrations;
+  
   return (
     <div>
       <PageHeader title="Dashboard" sub="Welcome back. Here's what's happening." />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
-        <StatCard label="Total Events" value="3" sub="All time" accent />
-        <StatCard label="Registrations" value="245" sub="Across all events" />
-        <StatCard label="Available Seats" value="105" sub="Remaining capacity" />
-        <StatCard label="Avg. Rating" value="4.0" sub="From 3 reviews" />
+        <StatCard key="total-events" label="Total Events" value={eventCount.toString()} sub="All time" accent />
+        <StatCard key="registrations" label="Registrations" value={totalRegistrations.toString()} sub="Across all events" />
+        <StatCard key="seats" label="Available Seats" value={availableSeats.toString()} sub="Remaining capacity" />
+        <StatCard key="rating" label="Avg. Rating" value="4.0" sub="From 3 reviews" />
       </div>
       <h3 style={{ fontSize: 14, fontWeight: 700, color: C.black, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.08em" }}>Your Events</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {mockEvents.map(ev => (
-          <Card key={ev.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 20px" }}>
-            <div>
-              <p style={{ fontWeight: 700, fontSize: 14, color: C.black, margin: 0 }}>{ev.title}</p>
-              <p style={{ fontSize: 12, color: "#999", marginTop: 3 }}>{ev.date} · {ev.category}</p>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
-              <div style={{ textAlign: "right" }}>
-                <p style={{ fontSize: 11, color: "#999" }}>Seats</p>
-                <p style={{ fontSize: 13, fontWeight: 700, color: C.black }}>{ev.registered}/{ev.seats}</p>
+        {events && events.length > 0 ? (
+          events.map(ev => (
+            <Card key={ev.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 20px" }}>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: 14, color: C.black, margin: 0 }}>{ev.title}</p>
+                <p style={{ fontSize: 12, color: "#999", marginTop: 3 }}>{ev.date} · {ev.category}</p>
               </div>
-              <div style={{ width: 80, background: C.lightGray, borderRadius: 99, height: 4 }}>
-                <div style={{ background: C.orange, height: 4, borderRadius: 99, width: `${(ev.registered / ev.seats) * 100}%` }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
+                <div style={{ textAlign: "right" }}>
+                  <p style={{ fontSize: 11, color: "#999" }}>Seats</p>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: C.black }}>{ev.registered || ev.availableTickets || 0}/{ev.seats || ev.availableTickets || 0}</p>
+                </div>
+                <div style={{ width: 80, background: C.lightGray, borderRadius: 99, height: 4 }}>
+                  <div style={{ background: C.orange, height: 4, borderRadius: 99, width: `${((ev.registered || ev.availableTickets || 0) / (ev.seats || ev.availableTickets || 1)) * 100}%` }} />
+                </div>
+                <Badge status={ev.status || "upcoming"} />
               </div>
-              <Badge status={ev.status} />
-            </div>
+            </Card>
+          ))
+        ) : (
+          <Card key="no-events">
+            <p style={{ textAlign: "center", color: C.midGray, margin: 0 }}>No events found. Create your first event!</p>
           </Card>
-        ))}
+        )}
       </div>
     </div>
   );
 }
 
 // ── EVENT MANAGEMENT ──
-function EventManagement() {
+function EventManagement({ events = [], setEvents, fetchEvents }) {
   const [showForm, setShowForm] = useState(false);
-  const [events, setEvents] = useState(mockEvents);
-  const [form, setForm] = useState({ title: "", date: "", category: "", seats: "" });
+  const [form, setForm] = useState({ 
+    title: "", 
+    category: "", 
+    date: "", 
+    venue: "", 
+    price: "", 
+    availableTickets: "", 
+    organizer: "", 
+    status: "" 
+  });
 
-  function handleCreate(e) {
+  const handleCreate = async (e) => {
     e.preventDefault();
-    setEvents([...events, { id: Date.now(), ...form, seats: Number(form.seats), registered: 0, status: "upcoming" }]);
-    setForm({ title: "", date: "", category: "", seats: "" });
-    setShowForm(false);
-  }
+    try {
+      const res = await axios.post(`http://localhost:${PORT}/api/events/create-event`, {
+        title: form.title,
+        category: form.category,
+        date: form.date,
+        venue: form.venue,
+        price: Number(form.price),
+        availableTickets: Number(form.availableTickets),
+        organizer: form.organizer,
+        status: form.status
+      });
+
+      console.log("Created: ", res.data);
+      if (res.data && res.data.event) {
+        setEvents([...events, res.data.event]);
+      } else {
+        // Refresh events if response structure is different
+        fetchEvents();
+      }
+
+      setForm({
+        title: "",
+        category: "",
+        date: "",
+        venue: "",
+        price: "",
+        availableTickets: "",
+        organizer: "",
+        status: ""
+      });
+
+      setShowForm(false);
+    }
+    catch (error) {
+      console.log(error);
+      alert("Failed to create event");
+    }
+  };
+
+  const handleDelete = async (eventId) => {
+    try {
+      await axios.delete(`http://localhost:${PORT}/api/events/delete-event/${eventId}`);
+      setEvents(events.filter(e => e.id !== eventId));
+    } catch (error) {
+      console.log("Error deleting event:", error);
+      alert("Failed to delete event");
+    }
+  };
 
   return (
     <div>
@@ -218,11 +282,65 @@ function EventManagement() {
           <form onSubmit={handleCreate}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div style={{ gridColumn: "span 2" }}>
-                <Input label="Event Title" required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Annual Tech Meetup" />
+                <Input
+                  label="Event Title"
+                  required
+                  value={form.title}
+                  onChange={e => setForm({ ...form, title: e.target.value })}
+                  placeholder="e.g. Annual Tech Meetup"
+                />
               </div>
-              <Input label="Date" type="date" required value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
-              <Input label="Category" required value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="e.g. Technology" />
-              <Input label="Total Seats" type="number" required value={form.seats} onChange={e => setForm({ ...form, seats: e.target.value })} placeholder="100" />
+              <Input
+                label="Category"
+                required
+                value={form.category}
+                onChange={e => setForm({ ...form, category: e.target.value })}
+                placeholder="e.g. Technology"
+              />
+              <Input
+                label="Date"
+                type="date"
+                required
+                value={form.date}
+                onChange={e => setForm({ ...form, date: e.target.value })}
+              />
+              <Input
+                label="Venue"
+                required
+                value={form.venue}
+                onChange={e => setForm({ ...form, venue: e.target.value })}
+                placeholder="e.g. Mumbai Convention Center"
+              />
+              <Input
+                label="Price"
+                type="number"
+                required
+                value={form.price}
+                onChange={e => setForm({ ...form, price: e.target.value })}
+                placeholder="e.g. 499"
+              />
+              <Input
+                label="Available Tickets"
+                type="number"
+                required
+                value={form.availableTickets}
+                onChange={e => setForm({ ...form, availableTickets: e.target.value })}
+                placeholder="e.g. 100"
+              />
+              <Input
+                label="Organizer"
+                required
+                value={form.organizer}
+                onChange={e => setForm({ ...form, organizer: e.target.value })}
+                placeholder="e.g. Tech Club"
+              />
+              <Input
+                label="Status"
+                required
+                value={form.status}
+                onChange={e => setForm({ ...form, status: e.target.value })}
+                placeholder="pending / approved / rejected"
+              />
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
               <Btn type="submit">Save Event</Btn>
@@ -233,19 +351,25 @@ function EventManagement() {
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {events.map(ev => (
-          <Card key={ev.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 20px" }}>
-            <div>
-              <p style={{ fontWeight: 700, fontSize: 14, color: C.black, margin: 0 }}>{ev.title}</p>
-              <p style={{ fontSize: 12, color: "#999", marginTop: 3 }}>{ev.date} · {ev.category} · {ev.seats} seats</p>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              <Badge status={ev.status} />
-              <Btn variant="outline">Edit</Btn>
-              <Btn variant="danger" onClick={() => setEvents(events.filter(e => e.id !== ev.id))}>Delete</Btn>
-            </div>
+        {events && events.length > 0 ? (
+          events.map(ev => (
+            <Card key={ev.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px 20px" }}>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: 14, color: C.black, margin: 0 }}>{ev.title}</p>
+                <p style={{ fontSize: 12, color: "#999", marginTop: 3 }}>{ev.date} · {ev.category} · {ev.seats || ev.availableTickets} seats</p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                <Badge status={ev.status} />
+                <Btn variant="outline">Edit</Btn>
+                <Btn variant="danger" onClick={() => handleDelete(ev.id)}>Delete</Btn>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <Card>
+            <p style={{ textAlign: "center", color: C.midGray, margin: 0 }}>No events found. Click "Create Event" to get started.</p>
           </Card>
-        ))}
+        )}
       </div>
     </div>
   );
@@ -353,7 +477,7 @@ function QRCheckin() {
 }
 
 // ── NOTIFICATIONS ──
-function Notifications() {
+function Notifications({ events = [] }) {
   const [msg, setMsg] = useState("");
   const [type, setType] = useState("reminder");
   const [sent, setSent] = useState(false);
@@ -383,7 +507,7 @@ function Notifications() {
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label style={{ fontSize: 11, color: C.midGray, fontWeight: 600, letterSpacing: "0.04em" }}>Select Event</label>
             <select style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, fontFamily: "inherit", background: C.white, outline: "none" }}>
-              {mockEvents.map(ev => <option key={ev.id}>{ev.title}</option>)}
+              {events.map(ev => <option key={ev.id}>{ev.title}</option>)}
             </select>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -478,17 +602,6 @@ function Profile() {
   );
 }
 
-const views = {
-  dashboard: Dashboard,
-  events: EventManagement,
-  registrations: Registrations,
-  qr: QRCheckin,
-  notifications: Notifications,
-  gallery: Gallery,
-  feedback: Feedback,
-  profile: Profile,
-};
-
 // ── NAV ICONS (simple SVG, no emoji) ──
 const NavIcon = ({ id, active }) => {
   const color = active ? C.orange : "#999";
@@ -508,10 +621,60 @@ const NavIcon = ({ id, active }) => {
 export default function OrganizerPanel() {
   const [active, setActive] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const ActiveView = views[active];
+  const [events, setEvents] = useState([]);
 
   const NexEventPage = () => {
     window.location.href = "/";
+  };
+
+  const fetchEvents = async () => {
+    try {
+      const res = await axios.get(`http://localhost:${PORT}/api/events/get-events`);
+      console.log("GET response:", res.data);
+      
+      // Handle different response structures
+      if (res.data && res.data.events && Array.isArray(res.data.events)) {
+        setEvents(res.data.events);
+      } else if (res.data && Array.isArray(res.data)) {
+        setEvents(res.data);
+      } else if (res.data && res.data.success && Array.isArray(res.data.events)) {
+        setEvents(res.data.events);
+      } else {
+        console.warn("Unexpected response structure:", res.data);
+        setEvents([]);
+      }
+    } catch (error) {
+      console.log("Error fetching events:", error);
+      setEvents([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  // Render the active view with appropriate props
+  const renderActiveView = () => {
+    switch(active) {
+      case "dashboard":
+        return <Dashboard key="dashboard" events={events} />;
+      case "events":
+        return <EventManagement key="events" events={events} setEvents={setEvents} fetchEvents={fetchEvents} />;
+      case "registrations":
+        return <Registrations key="registrations" />;
+      case "qr":
+        return <QRCheckin key="qr" />;
+      case "notifications":
+        return <Notifications key="notifications" events={events} />;
+      case "gallery":
+        return <Gallery key="gallery" />;
+      case "feedback":
+        return <Feedback key="feedback" />;
+      case "profile":
+        return <Profile key="profile" />;
+      default:
+        return <Dashboard key="dashboard-default" events={events} />;
+    }
   };
 
   return (
@@ -548,14 +711,13 @@ export default function OrganizerPanel() {
 
         {/* Logout */}
         <div style={{ padding: "12px 8px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <button style={{
+          <button key="logout-button" style={{
             width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10,
             border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 600, fontSize: 13,
             background: "transparent", color: "rgba(255,255,255,0.35)", transition: "all 0.15s", whiteSpace: "nowrap",
           }}
             onMouseEnter={e => { e.currentTarget.style.color = "#FF6B6B"; e.currentTarget.style.background = "rgba(255,100,100,0.08)"; }}
             onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; e.currentTarget.style.background = "transparent"; }}
-
             onClick={NexEventPage}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
@@ -571,20 +733,20 @@ export default function OrganizerPanel() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Topbar */}
         <header style={{ background: C.white, borderBottom: `1px solid ${C.border}`, padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, borderRadius: 8, color: C.midGray, display: "flex", alignItems: "center" }}>
+          <button key="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, borderRadius: 8, color: C.midGray, display: "flex", alignItems: "center" }}>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 13, color: "#AAA", fontWeight: 500 }}>Organizer Panel</span>
-            <div style={{ width: 34, height: 34, borderRadius: 99, background: C.black, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: C.orange }}>O</div>
+            <div key="avatar" style={{ width: 34, height: 34, borderRadius: 99, background: C.black, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: C.orange }}>O</div>
           </div>
         </header>
 
         {/* Content */}
         <main style={{ flex: 1, overflowY: "auto", padding: "32px 36px" }}>
-          <ActiveView />
+          {renderActiveView()}
         </main>
       </div>
     </div>

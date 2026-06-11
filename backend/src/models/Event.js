@@ -6,6 +6,10 @@ const EventSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  category: {
+    type: String,
+    required: true
+  },
   date: {
     type: Date,
     required: true,
@@ -23,11 +27,17 @@ const EventSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  organizer: {
+    name: String
   },
-});
+  status: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending"
+  }
+},
+  { timestamps: true }
+);
 
 const Event = mongoose.model("Event", EventSchema);
 

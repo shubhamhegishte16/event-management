@@ -7,6 +7,7 @@ import EventsSection from "./Landing Page/EventsSection";
 import OrganizerSignup from "./pages/organizerSignup";
 import UserDashboard from "./UserPanel/UserDashoboard";
 
+
 function AppRoutes() {
   const navigate = useNavigate();
   return (

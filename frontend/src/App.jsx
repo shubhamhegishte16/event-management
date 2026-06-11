@@ -4,6 +4,7 @@ import BrowseEvents from "./BrowseEvents";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
 import EventsSection from "./Landing Page/EventsSection";
+import OrganizerSignup from "./pages/organizerSignup";
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ function AppRoutes() {
       <Route path="/event-section" element={<EventsSection />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/organizer-signup" element={<OrganizerSignup />} />
     </Routes>
   );
 }

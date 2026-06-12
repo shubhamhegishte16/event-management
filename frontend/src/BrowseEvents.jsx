@@ -20,13 +20,32 @@ export default function BrowseEvents({ onBackHome }) {
   const [events, setEvents] = useState([]);
   const [booking, setBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch events from backend
+  // Fetch events from backend - FIXED ENDPOINT
   useEffect(() => {
-    fetch("http://localhost:5000/api/events")
-      .then((res) => res.json())
-      .then((data) => setEvents(data.events))
-      .catch((err) => console.error("Failed to fetch events:", err));
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:5000/api/events/get-events");
+        const data = await response.json();
+        
+        if (data.success && Array.isArray(data.events)) {
+          setEvents(data.events);
+        } else {
+          console.error("Unexpected response:", data);
+          setError("Failed to load events");
+        }
+      } catch (err) {
+        console.error("Failed to fetch events:", err);
+        setError("Failed to connect to server");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
   }, []);
 
   const featuredRows = useMemo(() => [
@@ -47,12 +66,13 @@ export default function BrowseEvents({ onBackHome }) {
   }, [query, featuredRows, events]);
 
   const categoryClass = {
-    Concerts: "concert",
-    Business: "business",
-    Food: "food",
-    Creative: "design",
-    Comedy: "comedy",
-    Sports: "sports",
+    "Technology": "concert",
+    "Workshop": "business",
+    "Sports": "sports",
+    "Cultural": "design",
+    "Business": "business",
+    "Music": "concert",
+    "Other": "concert",
   };
 
   const handleBookTicket = async () => {
@@ -80,6 +100,19 @@ export default function BrowseEvents({ onBackHome }) {
 
       if (res.ok) {
         setBookingSuccess(true);
+        // Update available tickets in the selected event
+        setSelectedEvent(prev => ({
+          ...prev,
+          availableTickets: prev.availableTickets - 1
+        }));
+        // Update events list to reflect ticket reduction
+        setEvents(prevEvents => 
+          prevEvents.map(event => 
+            event._id === selectedEvent._id 
+              ? { ...event, availableTickets: event.availableTickets - 1 }
+              : event
+          )
+        );
         setTimeout(() => {
           setBookingSuccess(false);
           setSelectedEvent(null);
@@ -88,11 +121,72 @@ export default function BrowseEvents({ onBackHome }) {
         alert(data.message || "Booking failed. Please try again.");
       }
     } catch (err) {
+      console.error("Booking error:", err);
       alert("Something went wrong. Please try again.");
     } finally {
       setBooking(false);
     }
   };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "Date TBD";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  // Format time for display (assuming date includes time)
+  const formatTime = (dateString) => {
+    if (!dateString) return "Time TBD";
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  if (loading) {
+    return (
+      <main className="browse-page">
+        <nav className="browse-nav">
+          <button className="browse-brand" onClick={onBackHome} type="button">
+            NexEvent
+          </button>
+          <div className="browse-nav-links">
+            <Link to="/login">Login</Link>
+            <Link className="signup-link" to="/signup">Sign Up</Link>
+          </div>
+        </nav>
+        <div style={{ textAlign: "center", padding: "4rem" }}>
+          <p>Loading events...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="browse-page">
+        <nav className="browse-nav">
+          <button className="browse-brand" onClick={onBackHome} type="button">
+            NexEvent
+          </button>
+          <div className="browse-nav-links">
+            <Link to="/login">Login</Link>
+            <Link className="signup-link" to="/signup">Sign Up</Link>
+          </div>
+        </nav>
+        <div style={{ textAlign: "center", padding: "4rem" }}>
+          <p style={{ color: "red" }}>Error: {error}</p>
+          <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="browse-page">
@@ -133,7 +227,7 @@ export default function BrowseEvents({ onBackHome }) {
 
       <section className="event-shelves" aria-label="Event collections">
         {events.length === 0 ? (
-          <p style={{ textAlign: "center", padding: "2rem" }}>Loading events...</p>
+          <p style={{ textAlign: "center", padding: "2rem" }}>No events available. Check back later!</p>
         ) : (
           visibleRows.map((row) => (
             <div className="event-row" key={row.title}>
@@ -162,11 +256,14 @@ export default function BrowseEvents({ onBackHome }) {
                       </div>
                       <div className="event-card-body">
                         <h3>{event.title}</h3>
-                        <p><CalendarDays size={15} />{event.date}</p>
+                        <p><CalendarDays size={15} />{formatDate(event.date)}</p>
                         <p><MapPin size={15} />{event.venue}</p>
                         <div className="event-card-meta">
-                          <span>From Rs. {event.price}</span>
-                          <span><Star size={14} fill="currentColor" />{event.rating || "4.8"}</span>
+                          <span>From ₹{event.price}</span>
+                          <span><Star size={14} fill="currentColor" />{event.rating || "4.5"}</span>
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#666", marginTop: "8px" }}>
+                          <Ticket size={12} /> {event.availableTickets} tickets left
                         </div>
                       </div>
                     </article>
@@ -204,19 +301,25 @@ export default function BrowseEvents({ onBackHome }) {
             <div className="event-popup-content">
               <p className="browse-kicker">Event details</p>
               <h2>{selectedEvent.title}</h2>
-              <p className="event-popup-summary">{selectedEvent.summary}</p>
+              <p className="event-popup-summary">
+                {selectedEvent.description || `Join us for an exciting ${selectedEvent.category} event! ${selectedEvent.title} promises to be an unforgettable experience. Don't miss out on this amazing opportunity to connect, learn, and have fun.`}
+              </p>
 
               <div className="event-popup-grid">
-                <span><CalendarDays size={17} />{selectedEvent.date}</span>
-                <span><Clock size={17} />{selectedEvent.time}</span>
+                <span><CalendarDays size={17} />{formatDate(selectedEvent.date)}</span>
+                <span><Clock size={17} />{formatTime(selectedEvent.date)}</span>
                 <span><MapPin size={17} />{selectedEvent.venue}</span>
-                <span><Users size={17} />{selectedEvent.attendees || "Going"}</span>
+                <span><Users size={17} />{selectedEvent.organizer?.name || "Event Organizer"}</span>
               </div>
 
               <div className="event-popup-booking">
                 <div>
                   <span>Ticket price</span>
-                  <strong>Rs. {selectedEvent.price}</strong>
+                  <strong>₹{selectedEvent.price}</strong>
+                </div>
+                <div>
+                  <span>Available seats</span>
+                  <strong>{selectedEvent.availableTickets} / {selectedEvent.totalTickets}</strong>
                 </div>
 
                 {bookingSuccess ? (
@@ -227,10 +330,16 @@ export default function BrowseEvents({ onBackHome }) {
                   <button
                     onClick={handleBookTicket}
                     type="button"
-                    disabled={booking}
+                    disabled={booking || selectedEvent.availableTickets === 0}
+                    style={{
+                      opacity: selectedEvent.availableTickets === 0 ? 0.5 : 1,
+                      cursor: selectedEvent.availableTickets === 0 ? "not-allowed" : "pointer"
+                    }}
                   >
                     <Ticket size={18} />
-                    {booking ? "Booking..." : "Book Ticket"}
+                    {selectedEvent.availableTickets === 0 
+                      ? "Sold Out" 
+                      : booking ? "Booking..." : "Book Ticket"}
                   </button>
                 )}
               </div>

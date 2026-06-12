@@ -94,6 +94,18 @@ export const getRegistrations = async (req, res) => {
 
 export const getEventRegistrations = async (req, res) => {
   try {
+    const event = await Event.findOne({
+      _id: req.params.eventId,
+      createdBy: req.user.id,
+    });
+
+    if (!event) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
     const registrations = await Registration.find({
       event: req.params.eventId,
     }).populate("event");
@@ -114,12 +126,15 @@ export const checkInAttendee = async (req, res) => {
   try {
     const registration = await Registration.findById(
       req.params.id
-    );
+    ).populate("event");
 
-    if (!registration) {
-      return res.status(404).json({
+    if (
+      registration.event.createdBy.toString() !==
+      req.user.id
+    ) {
+      return res.status(403).json({
         success: false,
-        message: "Registration not found",
+        message: "Unauthorized",
       });
     }
 
@@ -141,12 +156,17 @@ export const checkInAttendee = async (req, res) => {
 
 export const deleteRegistration = async (req, res) => {
   try {
-    const registration = await Registration.findById(req.params.id);
+    const registration = await Registration.findById(
+      req.params.id
+    ).populate("event");
 
-    if (!registration) {
-      return res.status(404).json({
+    if (
+      registration.event.createdBy.toString() !==
+      req.user.id
+    ) {
+      return res.status(403).json({
         success: false,
-        message: "Registration not found",
+        message: "Unauthorized",
       });
     }
 

@@ -23,7 +23,7 @@ export default function BrowseEvents() {
   useEffect(() => {
     fetch("http://localhost:5000/api/events")
       .then((res) => res.json())
-      .then((data) => setEvents(data))
+      .then((data) => setEvents(data.events))
       .catch((err) => console.error("Failed to fetch events:", err));
   }, []);
 

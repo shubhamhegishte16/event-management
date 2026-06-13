@@ -2,6 +2,7 @@ import { ChevronDown, LogOut } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import BrowseEvents from "./BrowseEvents.jsx";
 import Tickets from "./Tickets.jsx";
+import Gallery from "./Gallery.jsx";
 
 const myEvents = ["Upcoming Events", "Completed Events"];
 
@@ -31,6 +32,7 @@ export default function UserDashboard({ onBackHome }) {
     switch (activeLink) {
       case "browse":           return <BrowseEvents />;
       case "tickets":          return <Tickets />;
+      case "gallery":          return <Gallery />;
       case "Upcoming Events":  return <BrowseEvents filterType="upcoming" />;
       case "Completed Events": return <BrowseEvents filterType="completed" />;
       default:                 return <BrowseEvents />;

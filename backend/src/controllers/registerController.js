@@ -3,9 +3,10 @@ import Event from "../models/Event.js";
 
 export const registerForEvent = async (req, res) => {
   try {
-    const { eventId, ticketsBooked } = req.body;
+    const { eventId } = req.body;
+    const ticketsBooked = Number(req.body.ticketsBooked || req.body.quantity || 1);
 
-    const attendeeName = req.user.fullName;
+    const attendeeName = req.user.name;
     const attendeeEmail = req.user.email;
 
     const event = await Event.findById(eventId);
@@ -97,7 +98,11 @@ export const getEventRegistrations = async (req, res) => {
   try {
     const event = await Event.findOne({
       _id: req.params.eventId,
-      createdBy: req.user.id,
+      $or: [
+        { organizerId: req.user.id },
+        { "organizer.id": req.user.id },
+        { createdBy: req.user.id }
+      ]
     });
 
     if (!event) {
@@ -136,9 +141,10 @@ export const checkInAttendee = async (req, res) => {
       });
     }
 
+    const organizerId = registration.event?.organizerId || registration.event?.organizer?.id || registration.event?.createdBy;
     if (
-      registration.event.createdBy.toString() !==
-      req.user.id
+      !organizerId ||
+      organizerId.toString() !== req.user.id
     ) {
       return res.status(403).json({
         success: false,
@@ -153,6 +159,7 @@ export const checkInAttendee = async (req, res) => {
       });
     }
 
+    registration.checkInStatus = true;
     await registration.save();
 
     res.status(200).json({
@@ -222,7 +229,7 @@ export const getRegistrationById = async (req, res) => {
     const registration = await Registration.findById(req.params.id)
       .populate({
         path: "event",
-        select: "title date venue createdBy",
+        select: "title date venue createdBy organizerId organizer",
       });
 
     if (!registration) {
@@ -235,9 +242,8 @@ export const getRegistrationById = async (req, res) => {
     const isAttendee =
       registration.attendeeEmail === req.user.email;
 
-    const isOrganizer =
-      registration.event.createdBy?.toString() ===
-      req.user.id;
+    const organizerId = registration.event?.organizerId || registration.event?.organizer?.id || registration.event?.createdBy;
+    const isOrganizer = organizerId && organizerId.toString() === req.user.id;
 
     if (!isAttendee && !isOrganizer) {
       return res.status(403).json({
@@ -249,6 +255,36 @@ export const getRegistrationById = async (req, res) => {
     res.status(200).json({
       success: true,
       registration,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getOrganizerRegistrations = async (req, res) => {
+  try {
+    // 1. Find all events created/organized by this organizer
+    const events = await Event.find({
+      $or: [
+        { organizerId: req.user.id },
+        { "organizer.id": req.user.id },
+        { createdBy: req.user.id }
+      ]
+    });
+    
+    const eventIds = events.map(e => e._id);
+    
+    // 2. Find all registrations for these events
+    const registrations = await Registration.find({
+      event: { $in: eventIds }
+    }).populate("event");
+    
+    res.status(200).json({
+      success: true,
+      registrations,
     });
   } catch (error) {
     res.status(500).json({

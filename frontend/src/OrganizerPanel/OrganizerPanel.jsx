@@ -380,6 +380,55 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
 // ── REGISTRATIONS ──
 function Registrations() {
   const [tab, setTab] = useState("participants");
+  const [registrations, setRegistrations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchRegistrations = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`http://localhost:5000/api/registrations/organizer`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success && Array.isArray(res.data.registrations)) {
+        setRegistrations(res.data.registrations);
+      } else {
+        setRegistrations([]);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch registrations");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRegistrations();
+  }, []);
+
+  const handleCheckIn = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(`http://localhost:5000/api/registrations/checkin/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        alert("Check-in successful!");
+        fetchRegistrations();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to check in");
+    }
+  };
+
+  if (loading) {
+    return <div className="p-5 text-gray-500 text-[13px]">Loading registrations...</div>;
+  }
+
+  if (error) {
+    return <div className="p-5 text-red-500 text-[13px]">Error: {error}</div>;
+  }
+
   return (
     <div>
       <PageHeader title="Registrations" sub="View participants and attendance records." />
@@ -392,30 +441,47 @@ function Registrations() {
         ))}
       </div>
       <div className="bg-white rounded-2xl border border-orange-100 overflow-hidden">
-        <table className="w-full border-collapse text-[13px]">
-          <thead>
-            <tr className="bg-orange-50">
-              {["Name", "Email", "Event", tab === "participants" ? "Status" : "Attended"].map(h => (
-                <th key={h} className="text-left px-5 py-3 text-[10px] font-bold text-orange-500 uppercase tracking-[0.1em]">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {mockParticipants.map((p, i) => (
-              <tr key={p.id} className={`border-b border-orange-50 ${i % 2 === 0 ? "bg-white" : "bg-orange-50/40"}`}>
-                <td className="px-5 py-3 font-semibold text-gray-800">{p.name}</td>
-                <td className="px-5 py-3 text-gray-400">{p.email}</td>
-                <td className="px-5 py-3 text-gray-500">{p.event}</td>
-                <td className="px-5 py-3">
-                  {tab === "participants"
-                    ? <Badge status={p.status} />
-                    : <span className={`text-[11px] font-bold px-[10px] py-1 rounded-full ${p.attended ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>{p.attended ? "Present" : "Absent"}</span>
-                  }
-                </td>
+        {registrations.length === 0 ? (
+          <div className="p-8 text-center text-gray-400 text-[13px]">No registrations found for your events.</div>
+        ) : (
+          <table className="w-full border-collapse text-[13px]">
+            <thead>
+              <tr className="bg-orange-50">
+                {["Name", "Email", "Event", tab === "participants" ? "Status" : "Attended"].map(h => (
+                  <th key={h} className="text-left px-5 py-3 text-[10px] font-bold text-orange-500 uppercase tracking-[0.1em]">{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {registrations.map((p, i) => (
+                <tr key={p._id} className={`border-b border-orange-50 ${i % 2 === 0 ? "bg-white" : "bg-orange-50/40"}`}>
+                  <td className="px-5 py-3 font-semibold text-gray-800">{p.attendeeName}</td>
+                  <td className="px-5 py-3 text-gray-400">{p.attendeeEmail}</td>
+                  <td className="px-5 py-3 text-gray-500">{p.event?.title || "Deleted Event"}</td>
+                  <td className="px-5 py-3">
+                    {tab === "participants" ? (
+                      <Badge status={p.paymentStatus || "confirmed"} />
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[11px] font-bold px-[10px] py-1 rounded-full ${p.checkInStatus ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+                          {p.checkInStatus ? "Present" : "Absent"}
+                        </span>
+                        {!p.checkInStatus && (
+                          <button
+                            onClick={() => handleCheckIn(p._id)}
+                            className="bg-orange-100 hover:bg-orange-200 text-orange-600 text-[10px] font-bold px-2.5 py-1 rounded-lg border-none cursor-pointer transition-colors"
+                          >
+                            Check In
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
@@ -424,14 +490,55 @@ function Registrations() {
 // ── QR CHECK-IN ──
 function QRCheckin() {
   const [scanned, setScanned] = useState(false);
+  const [recentCheckins, setRecentCheckins] = useState([]);
   const [input, setInput] = useState("");
+  const [error, setError] = useState("");
 
-  function handleScan(e) {
+  const fetchRecentCheckins = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`http://localhost:5000/api/registrations/organizer`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success && Array.isArray(res.data.registrations)) {
+        const checkedIn = res.data.registrations
+          .filter(r => r.checkInStatus)
+          .map(r => ({
+            id: r._id,
+            name: r.attendeeName,
+            event: r.event?.title || "Event"
+          }));
+        setRecentCheckins(checkedIn);
+      }
+    } catch (err) {
+      console.error("Failed to load recent checkins", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecentCheckins();
+  }, []);
+
+  const handleScan = async (e) => {
     e.preventDefault();
-    setScanned(true);
-    setTimeout(() => setScanned(false), 3000);
-    setInput("");
-  }
+    if (!input.trim()) return;
+    setError("");
+    setScanned(false);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(`http://localhost:5000/api/registrations/checkin/${input.trim()}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setScanned(true);
+        setError("");
+        fetchRecentCheckins();
+        setInput("");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to verify check-in");
+    }
+  };
 
   return (
     <div>
@@ -453,22 +560,31 @@ function QRCheckin() {
           </form>
           {scanned && (
             <div className="bg-green-50 border border-green-200 text-green-700 text-[13px] rounded-xl px-4 py-3 mt-3 font-semibold">
-              Attendance verified successfully.
+              ✓ Attendance verified successfully.
+            </div>
+          )}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-[13px] rounded-xl px-4 py-3 mt-3 font-semibold">
+              ✗ {error}
             </div>
           )}
         </Card>
         <Card>
           <h3 className="text-sm font-bold text-gray-800 mt-0 mb-4">Recent Check-ins</h3>
-          <div className="flex flex-col gap-3.5">
-            {mockParticipants.filter(p => p.attended).map(p => (
-              <div key={p.id} className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-[13px] text-gray-800 m-0">{p.name}</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">{p.event}</p>
+          <div className="flex flex-col gap-3.5 max-h-[300px] overflow-y-auto">
+            {recentCheckins.length === 0 ? (
+              <p className="text-gray-400 text-[13px] m-0">No checked-in attendees yet.</p>
+            ) : (
+              recentCheckins.map(p => (
+                <div key={p.id} className="flex items-center justify-between border-b border-orange-50/60 pb-2 last:border-b-0">
+                  <div>
+                    <p className="font-semibold text-[13px] text-gray-800 m-0">{p.name}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">{p.event}</p>
+                  </div>
+                  <span className="text-[11px] font-bold bg-orange-50 text-orange-500 px-[10px] py-1 rounded-full">Checked in</span>
                 </div>
-                <span className="text-[11px] font-bold bg-orange-50 text-orange-500 px-[10px] py-1 rounded-full">Checked in</span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
       </div>
@@ -527,24 +643,130 @@ function Notifications({ events = [] }) {
 }
 
 // ── GALLERY ──
-function Gallery() {
+function Gallery({ events = [] }) {
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [images, setImages] = useState([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+  const [viewImage, setViewImage] = useState(null);
+
+  const token = localStorage.getItem("token");
+
+  const fetchImages = async (eventId) => {
+    if (!eventId) { setImages([]); return; }
+    setLoadingImages(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/images/event/${eventId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setImages(data.images);
+      else setImages([]);
+    } catch { setImages([]); }
+    finally { setLoadingImages(false); }
+  };
+
+  const handleEventChange = (e) => {
+    const id = e.target.value;
+    setSelectedEventId(id);
+    fetchImages(id);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this image?")) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/images/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setImages((prev) => prev.filter((img) => img._id !== id));
+      else alert(data.message || "Failed to delete.");
+    } catch { alert("Failed to delete image."); }
+  };
+
   return (
     <div>
-      <PageHeader title="Gallery" sub="Manage event photos and media." />
-      <Card>
-        <div className="border-2 border-dashed border-orange-200 rounded-xl py-10 px-6 text-center cursor-pointer mb-5 hover:border-orange-400 hover:bg-orange-50/50 transition-colors">
-          <Images size={28} className="mx-auto mb-2 text-orange-300" />
-          <p className="text-sm font-bold text-gray-500 m-0 mb-1">Click to upload photos or videos</p>
-          <p className="text-xs text-gray-400 m-0">PNG, JPG, MP4 supported</p>
+      <PageHeader title="Gallery" sub="View photos uploaded by attendees for your events." />
+
+      {/* Event selector */}
+      <Card className="mb-5">
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] text-gray-400 font-semibold tracking-[0.04em]">Select Event</label>
+          <select
+            value={selectedEventId}
+            onChange={handleEventChange}
+            className="border border-orange-100 rounded-xl px-3 py-[9px] text-[13px] bg-white outline-none focus:border-orange-300 transition-colors"
+          >
+            <option value="">— Choose an event —</option>
+            {events.map((ev) => (
+              <option key={ev._id} value={ev._id}>
+                {ev.title}{ev.date ? ` — ${new Date(ev.date).toLocaleDateString()}` : ""}
+              </option>
+            ))}
+          </select>
         </div>
+      </Card>
+
+      {/* Images grid */}
+      {!selectedEventId ? (
+        <Card>
+          <div className="py-10 text-center">
+            <Images size={36} className="mx-auto mb-2 text-orange-200" />
+            <p className="text-sm text-gray-400 m-0 font-semibold">Select an event above to view uploaded photos.</p>
+          </div>
+        </Card>
+      ) : loadingImages ? (
+        <Card><p className="text-center text-gray-400 m-0 py-6">Loading images...</p></Card>
+      ) : images.length === 0 ? (
+        <Card>
+          <div className="py-10 text-center">
+            <Images size={36} className="mx-auto mb-2 text-orange-200" />
+            <p className="text-sm text-gray-500 m-0 font-semibold">No photos uploaded yet</p>
+            <p className="text-xs text-gray-400 m-0 mt-1">Attendees can upload photos from their dashboard.</p>
+          </div>
+        </Card>
+      ) : (
         <div className="grid grid-cols-3 gap-3">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="aspect-square bg-orange-50 rounded-xl flex items-center justify-center">
-              <span className="text-[11px] text-orange-200 font-semibold uppercase tracking-[0.1em]">Photo</span>
+          {images.map((img) => (
+            <div key={img._id} className="group relative rounded-xl overflow-hidden border border-orange-100 bg-white shadow-sm hover:shadow-md transition-all">
+              <div className="aspect-square cursor-pointer overflow-hidden" onClick={() => setViewImage(img)}>
+                <img src={img.imageData} alt={img.caption || img.fileName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              <div className="p-2.5">
+                <p className="text-[11px] font-semibold text-gray-700 m-0 truncate">{img.uploaderName}</p>
+                {img.caption && <p className="text-[10px] text-gray-400 m-0 mt-0.5 truncate">{img.caption}</p>}
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-[10px] text-gray-400">{new Date(img.createdAt).toLocaleDateString()}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(img._id)}
+                    className="w-6 h-6 flex items-center justify-center rounded-lg bg-red-50 text-red-400 border-0 cursor-pointer hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-      </Card>
+      )}
+
+      {/* Lightbox */}
+      {viewImage && (
+        <div className="fixed inset-0 z-[9999] grid place-items-center p-6 bg-black/60 backdrop-blur-sm" onClick={() => setViewImage(null)}>
+          <div className="relative max-w-2xl w-full rounded-2xl bg-white shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={() => setViewImage(null)} className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md border-0 cursor-pointer hover:bg-white transition-colors">
+              <X size={16} />
+            </button>
+            <img src={viewImage.imageData} alt={viewImage.caption || viewImage.fileName} className="w-full max-h-[70vh] object-contain bg-gray-100" />
+            <div className="p-4">
+              <p className="font-bold text-sm text-gray-800 m-0">Uploaded by {viewImage.uploaderName}</p>
+              {viewImage.caption && <p className="text-[13px] text-gray-500 m-0 mt-1">{viewImage.caption}</p>}
+              <p className="text-[11px] text-gray-400 m-0 mt-1">{new Date(viewImage.createdAt).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1022,7 +1244,7 @@ export default function OrganizerPanel() {
       case "registrations": return <Registrations key="registrations" />;
       case "qr": return <QRCheckin key="qr" />;
       case "notifications": return <Notifications key="notifications" events={events} />;
-      case "gallery": return <Gallery key="gallery" />;
+      case "gallery": return <Gallery key="gallery" events={events} />;
       case "feedback": return <Feedback key="feedback" />;
       case "profile": return <Profile key="profile" />;
       default: return <Dashboard key="dashboard-default" events={events} />;

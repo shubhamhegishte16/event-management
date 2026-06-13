@@ -10,8 +10,8 @@ import startServer from "./src/config/db.js";
 import authRoutes from "./src/routes/auth.js";
 import ticketRoutes from "./src/routes/tickets.js";
 import eventRoutes from "./src/routes/eventRoute.js";
-import organizerRoutes from "./src/routes/organizers.js";
-import registerRotes from "./src/routes/registerRotes.js";
+import organizerRoutes from "./src/routes/organizerRoutes.js";
+import registrationRoutes from "./src/routes/registerRotes.js";
 import adminRoutes from "./src/routes/adminRoutes.js";
 
 // Load environment variables
@@ -31,8 +31,8 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/events", eventRoutes);
-app.use("/api/organizers", organizerRoutes);
-app.use("/api/registerations", registerRotes);
+app.use("/api/organizer", organizerRoutes);
+app.use("/api/registrations", registrationRoutes);
 app.use("/api/admin", adminRoutes);
 
 // Base route

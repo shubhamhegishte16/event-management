@@ -2,6 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import Organizer from "../models/Organizer.js";
 import protectOrganizer from "../middleware/organizerAuthMiddleware.js";
+import { getOrganizerProfile } from "../controllers/organizerController.js";
 
 const router = express.Router();
 
@@ -161,9 +162,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// @route   PUT /api/organizer/update-profile
-// @desc    Update organizer profile
-// @access  Private (Organizer only)
+
 router.put("/update-profile", protectOrganizer, async (req, res) => {
   try {
     const organizerId = req.user.id;
@@ -195,24 +194,8 @@ router.put("/update-profile", protectOrganizer, async (req, res) => {
   }
 });
 
-// @route   GET /api/organizer/my-profile
-// @desc    Get organizer profile
-// @access  Private (Organizer only)
-router.get("/my-profile", protectOrganizer, async (req, res) => {
-  try {
-    const organizer = await Organizer.findById(req.user.id).select("-password");
-    if (!organizer) {
-      return res.status(404).json({ success: false, message: "Organizer not found" });
-    }
-    
-    res.json({
-      success: true,
-      user: organizer,
-    });
-  } catch (error) {
-    console.error("Get profile error:", error);
-    res.status(500).json({ success: false, message: "Failed to get profile" });
-  }
-});
+
+router.get("/profile", protectOrganizer, getOrganizerProfile);
+
 
 export default router;

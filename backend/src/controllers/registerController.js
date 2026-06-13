@@ -3,12 +3,10 @@ import Event from "../models/Event.js";
 
 export const registerForEvent = async (req, res) => {
   try {
-    const {
-      eventId,
-      attendeeName,
-      attendeeEmail,
-      ticketsBooked,
-    } = req.body;
+    const { eventId, ticketsBooked } = req.body;
+
+    const attendeeName = req.user.fullName;
+    const attendeeEmail = req.user.email;
 
     const event = await Event.findById(eventId);
 
@@ -75,10 +73,13 @@ export const registerForEvent = async (req, res) => {
   }
 };
 
-export const getRegistrations = async (req, res) => {
+export const getMyRegistrations = async (req, res) => {
+  console.log(req.user);
+
   try {
-    const registrations = await Registration.find()
-      .populate("event");
+    const registrations = await Registration.find({
+      attendeeEmail: req.user.email,
+    }).populate("event");
 
     res.status(200).json({
       success: true,
@@ -128,6 +129,13 @@ export const checkInAttendee = async (req, res) => {
       req.params.id
     ).populate("event");
 
+    if (!registration) {
+      return res.status(404).json({
+        success: false,
+        message: "Registration not found",
+      });
+    }
+
     if (
       registration.event.createdBy.toString() !==
       req.user.id
@@ -138,7 +146,12 @@ export const checkInAttendee = async (req, res) => {
       });
     }
 
-    registration.checkInStatus = true;
+    if (registration.checkInStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "Attendee already checked in",
+      });
+    }
 
     await registration.save();
 
@@ -154,15 +167,21 @@ export const checkInAttendee = async (req, res) => {
   }
 };
 
-export const deleteRegistration = async (req, res) => {
+export const cancelMyRegistration = async (req, res) => {
   try {
     const registration = await Registration.findById(
       req.params.id
     ).populate("event");
 
+    if (!registration) {
+      return res.status(404).json({
+        success: false,
+        message: "Registration not found",
+      });
+    }
+
     if (
-      registration.event.createdBy.toString() !==
-      req.user.id
+      registration.attendeeEmail !== req.user.email
     ) {
       return res.status(403).json({
         success: false,
@@ -170,14 +189,21 @@ export const deleteRegistration = async (req, res) => {
       });
     }
 
-    const event = await Event.findById(registration.event);
+    const event = registration.event;
 
-    if (event) {
-      event.availableTickets += registration.ticketsBooked;
-      await event.save();
-    }
+    event.availableTickets +=
+      registration.ticketsBooked;
+
+    await event.save();
 
     await registration.deleteOne();
+
+    if (registration.checkInStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "Checked-in registrations cannot be cancelled",
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -194,12 +220,29 @@ export const deleteRegistration = async (req, res) => {
 export const getRegistrationById = async (req, res) => {
   try {
     const registration = await Registration.findById(req.params.id)
-      .populate("event");
+      .populate({
+        path: "event",
+        select: "title date venue createdBy",
+      });
 
     if (!registration) {
       return res.status(404).json({
         success: false,
         message: "Registration not found",
+      });
+    }
+
+    const isAttendee =
+      registration.attendeeEmail === req.user.email;
+
+    const isOrganizer =
+      registration.event.createdBy?.toString() ===
+      req.user.id;
+
+    if (!isAttendee && !isOrganizer) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
       });
     }
 

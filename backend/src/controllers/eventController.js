@@ -1,9 +1,5 @@
-// controllers/eventController.js
 import Event from "../models/Event.js";
 
-// @desc    Create a new event
-// @route   POST /api/events/create-event
-// @access  Private (Organizer only)
 export const createEvent = async (req, res) => {
   try {
     const eventData = {
@@ -28,9 +24,6 @@ export const createEvent = async (req, res) => {
   }
 };
 
-// @desc    Get events for the logged-in organizer
-// @route   GET /api/events/getMyEvents
-// @access  Private (Organizer only)
 export const getMyEvents = async (req, res) => {
   try {
     const events = await Event.find({ "organizer.id": req.user.id });
@@ -45,9 +38,6 @@ export const getMyEvents = async (req, res) => {
   }
 };
 
-// @desc    Get all events (public browse) - approved only
-// @route   GET /api/events/get-events
-// @access  Public
 export const getEvents = async (req, res) => {
   try {
     const events = await Event.find({ status: "approved" });
@@ -62,9 +52,6 @@ export const getEvents = async (req, res) => {
   }
 };
 
-// @desc    Get single event
-// @route   GET /api/events/get-event/:id
-// @access  Private
 export const singleEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
@@ -87,9 +74,6 @@ export const singleEvent = async (req, res) => {
   }
 };
 
-// @desc    Update event
-// @route   PUT /api/events/update-event/:id
-// @access  Private (Organizer only)
 export const updateEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
@@ -118,9 +102,6 @@ export const updateEvent = async (req, res) => {
   }
 };
 
-// @desc    Delete event
-// @route   DELETE /api/events/delete-event/:id
-// @access  Private (Organizer only)
 export const deleteEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);

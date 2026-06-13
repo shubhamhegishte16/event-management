@@ -130,7 +130,7 @@ export default function BrowseEvents({ filterType = "browse" }) {
     if (!token) { navigate("/login"); return; }
     setBooking(true);
     try {
-      const res  = await fetch("http://localhost:5000/api/tickets/book", {
+      const res  = await fetch("http://localhost:5000/api/registrations/register", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ eventId: selectedEvent._id, quantity: 1 }),

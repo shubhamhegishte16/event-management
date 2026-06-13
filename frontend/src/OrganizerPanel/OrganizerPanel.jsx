@@ -1,17 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import axios from "axios";
 import {
-  LayoutDashboard,
-  CalendarDays,
-  Users,
-  QrCode,
   Bell,
-  Images,
-  MessageSquareText,
-  UserCog,
-  Menu,
-  X,
+  Building2,
+  CalendarDays,
+  LayoutDashboard,
   LogOut,
+  Mail,
+  MapPin,
+  Menu,
+  MessageSquareText,
+  Pencil,
+  Phone,
+  QrCode,
+  ShieldCheck,
+  User,
+  UserCog,
+  Users,
+  X,
+  Images
 } from "lucide-react";
 
 const PORT = 5000;
@@ -43,12 +50,12 @@ const mockFeedback = [
 // ── BADGE ──
 function Badge({ status }) {
   const map = {
-    upcoming:  "bg-orange-50 text-orange-500",
+    upcoming: "bg-orange-50 text-orange-500",
     completed: "bg-gray-100 text-gray-500",
     confirmed: "bg-green-50 text-green-700",
-    pending:   "bg-yellow-50 text-yellow-700",
-    approved:  "bg-green-50 text-green-700",
-    rejected:  "bg-red-50 text-red-600",
+    pending: "bg-yellow-50 text-yellow-700",
+    approved: "bg-green-50 text-green-700",
+    rejected: "bg-red-50 text-red-600",
   };
   const cls = map[status] || "bg-gray-100 text-gray-500";
   return (
@@ -73,8 +80,8 @@ function Stars({ rating }) {
 function Btn({ children, onClick, variant = "primary", type = "button", full }) {
   const styles = {
     primary: "bg-orange-500 text-white border-transparent shadow-md shadow-orange-200 hover:bg-orange-600",
-    ghost:   "bg-transparent text-gray-500 border border-orange-100 hover:bg-orange-50",
-    danger:  "bg-transparent text-red-500 border border-red-100 hover:bg-red-50",
+    ghost: "bg-transparent text-gray-500 border border-orange-100 hover:bg-orange-50",
+    danger: "bg-transparent text-red-500 border border-red-100 hover:bg-red-50",
     outline: "bg-transparent text-orange-500 border border-orange-200 hover:bg-orange-50",
   };
   return (
@@ -224,7 +231,6 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
   const [form, setForm] = useState({
     title: "", category: "Technology", date: "", venue: "", price: "",
     totalTickets: "", availableTickets: "", organizerName: "", image: ""
-    // ← status removed: backend always sets it to "pending" on create
   });
 
   const categories = ["Technology", "Workshop", "Sports", "Cultural", "Business", "Music", "Other"];
@@ -568,27 +574,352 @@ function Feedback() {
 
 // ── PROFILE ──
 function Profile() {
+
+  const [isEditing, setIsEditing] = useState(false);
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    orgName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    country: "",
+    pincode: "",
+  });
+
+  const [organizer, setOrganizer] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        console.log("Fetching:", "http://localhost:5000/api/organizer/profile");
+
+        const res = await axios.get(
+          `http://localhost:${PORT}/api/organizer/profile`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (res.data.success) {
+          setOrganizer(res.data.organizer);
+
+          setFormData({
+            fullName: res.data.organizer.fullName || "",
+            orgName: res.data.organizer.orgName || "",
+            email: res.data.organizer.email || "",
+            phone: res.data.organizer.phone || "",
+            address: res.data.organizer.address || "",
+            city: res.data.organizer.city || "",
+            state: res.data.organizer.state || "",
+            country: res.data.organizer.country || "",
+            pincode: res.data.organizer.pincode || "",
+          });
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.put(
+        `http://localhost:${PORT}/api/organizer/update-profile`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data.success) {
+        setOrganizer(res.data.user);
+        setIsEditing(false);
+        alert("Profile updated successfully");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  if (loading) {
+    return <p>Loading profile...</p>;
+  }
+
+  if (!organizer) {
+    return <p>Profile not found</p>;
+  }
+
   return (
     <div>
-      <PageHeader title="Profile & Settings" sub="Manage your organizer account." />
-      <Card className="max-w-[480px]">
-        <div className="flex items-center gap-4 mb-6 pb-5 border-b border-orange-100">
-          <div className="w-14 h-14 rounded-2xl bg-orange-500 flex items-center justify-center text-xl font-extrabold text-white shadow-md shadow-orange-200">O</div>
-          <div>
-            <p className="font-bold text-[15px] text-gray-800 m-0">OrganizerName</p>
-            <p className="text-[13px] text-gray-400 mt-0.5">organizer@email.com</p>
+      <PageHeader
+        title="Profile & Settings"
+        sub="Manage your organizer account details."
+      />
+
+      {/* Profile Header */}
+      <Card className="mb-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center text-2xl font-extrabold text-white shadow-md shadow-orange-200">
+              {organizer.fullName.charAt(0)}
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-orange-800">
+                {organizer.fullName}
+              </h3>
+
+              <p className="text-orange-400 text-sm">
+                {organizer.orgName}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Badge status={organizer.status} />
+
+            {isEditing && (
+              <Btn onClick={handleSave} className="bg-green-600 text-white hover:bg-green-700">
+                Save Changes
+              </Btn>
+            )}
+
+            <Btn onClick={() => setIsEditing(!isEditing)}>
+              <Pencil size={14} />
+              {isEditing ? "Cancel" : "Edit Profile"}
+            </Btn>
           </div>
         </div>
-        <div className="flex flex-col gap-3.5 mb-5">
-          {["Full Name", "Email", "Phone", "Organization"].map(field => (
-            <div key={field} className="flex flex-col gap-1">
-              <label className="text-[11px] text-gray-400 font-semibold tracking-[0.04em]">{field}</label>
-              <input className="border border-orange-100 rounded-xl px-3 py-[9px] text-[13px] outline-none focus:border-orange-300 transition-colors" placeholder={field} />
-            </div>
-          ))}
-        </div>
-        <Btn>Save Changes</Btn>
       </Card>
+
+      {/* Personal Information */}
+      <Card className="mb-5">
+        <h3 className="text-sm font-bold text-orange-800 mb-4">
+          Personal Information
+        </h3>
+
+        <div className="grid grid-cols-2 gap-4">
+          {isEditing ? (
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              className="border border-orange-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none rounded-lg p-2 w-full text-orange-900 bg-orange-50/30"
+            />
+          ) : (
+            <InfoBox
+              icon={<User size={18} className="text-orange-500" />}
+              label="Full Name"
+              value={organizer.fullName}
+            />
+          )}
+
+          {isEditing ? (
+            <input
+              type="text"
+              name="orgName"
+              value={formData.orgName}
+              onChange={handleChange}
+              className="border border-orange-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none rounded-lg p-2 w-full text-orange-900 bg-orange-50/30"
+            />
+          ) : (
+            <InfoBox
+              icon={<Building2 size={18} className="text-orange-500" />}
+              label="Organization"
+              value={organizer.orgName}
+            />
+          )}
+
+          {isEditing ? (
+            <input
+              type="text"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="border border-orange-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none rounded-lg p-2 w-full text-orange-900 bg-orange-50/30"
+            />
+          ) : (
+            <InfoBox
+              icon={<Mail size={18} className="text-orange-500" />}
+              label="Email"
+              value={organizer.email}
+            />
+          )}
+
+          {
+            isEditing && (
+              <div className="mt-5 flex justify-end">
+                <Btn onClick={handleSave}>
+                  Save Changes
+                </Btn>
+              </div>
+            )
+          }
+        </div>
+      </Card>
+
+      {/* Address Information */}
+      <Card className="mb-5">
+        <h3 className="text-sm font-bold text-orange-800 mb-4">
+          Address Information
+        </h3>
+
+        <div className="grid grid-cols-2 gap-4">
+          {isEditing ? (
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              className="border border-orange-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none rounded-lg p-2 w-full text-orange-900 bg-orange-50/30"
+            />
+          ) : (
+            <InfoBox
+              icon={<MapPin size={18} className="text-orange-500" />}
+              label="Address"
+              value={organizer.address}
+            />
+          )}
+
+          {isEditing ? (
+            <input
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              className="border border-orange-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none rounded-lg p-2 w-full text-orange-900 bg-orange-50/30"
+            />
+          ) : (
+            <InfoBox
+              icon={<MapPin size={18} className="text-orange-500" />}
+              label="City"
+              value={organizer.city}
+            />
+          )}
+
+          {isEditing ? (
+            <input
+              type="text"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              className="border border-orange-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none rounded-lg p-2 w-full text-orange-900 bg-orange-50/30"
+            />
+          ) : (
+            <InfoBox
+              icon={<MapPin size={18} className="text-orange-500" />}
+              label="State"
+              value={organizer.state}
+            />
+          )}
+
+          {isEditing ? (
+            <input
+              type="text"
+              name="pincode"
+              value={formData.pincode}
+              onChange={handleChange}
+              className="border border-orange-200 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none rounded-lg p-2 w-full text-orange-900 bg-orange-50/30"
+            />
+          ) : (
+            <InfoBox
+              icon={<MapPin size={18} className="text-orange-500" />}
+              label="Pincode"
+              value={organizer.pincode}
+            />
+          )}
+        </div>
+      </Card>
+
+      {/* Verification Details */}
+      <Card>
+        <h3 className="text-sm font-bold text-orange-800 mb-4">
+          Verification Details
+        </h3>
+
+        <div className="grid grid-cols-2 gap-4">
+          <InfoBox
+            icon={<ShieldCheck size={18} className="text-orange-500" />}
+            label="ID Type"
+            value={organizer.idType}
+          />
+
+          <InfoBox
+            icon={<ShieldCheck size={18} className="text-orange-500" />}
+            label="ID Number"
+            value={organizer.idNumber}
+          />
+
+          <InfoBox
+            icon={<CalendarDays size={18} className="text-orange-500" />}
+            label="Member Since"
+            value={
+              organizer.createdAt
+                ? new Date(organizer.createdAt).toLocaleDateString()
+                : "-"
+            }
+          />
+
+          <InfoBox
+            icon={<ShieldCheck size={18} className="text-orange-500" />}
+            label="Status"
+            value={organizer.status}
+          />
+        </div>
+      </Card>
+      {
+        isEditing && (
+          <div className="mt-5 flex justify-end">
+            <Btn onClick={handleSave}>
+              Save Changes
+            </Btn>
+          </div>
+        )
+      }
+    </div>
+  );
+}
+
+function InfoBox({ icon, label, value }) {
+  return (
+    <div className="border border-orange-100 rounded-xl p-4 flex gap-3">
+      <div className="text-orange-500 mt-0.5">
+        {icon}
+      </div>
+
+      <div>
+        <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
+          {label}
+        </p>
+
+        <p className="text-sm font-semibold text-gray-800 mt-1">
+          {value}
+        </p>
+      </div>
     </div>
   );
 }
@@ -600,6 +931,8 @@ export default function OrganizerPanel() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [organizer, setOrganizer] = useState(null);
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -623,7 +956,32 @@ export default function OrganizerPanel() {
     }
   };
 
-  useEffect(() => { fetchEvents(); }, []);
+  useEffect(() => {
+    fetchEvents();
+
+    const fetchOrganizer = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await axios.get(
+          `http://localhost:${PORT}/api/organizer/profile`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (res.data.success) {
+          setOrganizer(res.data.organizer);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchOrganizer();
+  }, []);
 
   const activeLabel = sidebarItems.find(n => n.id === active)?.label;
 
@@ -649,17 +1007,25 @@ export default function OrganizerPanel() {
     );
   }
 
+  if (!organizer) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>Loading organizer profile...</p>
+      </div>
+    );
+  }
+
   const renderActiveView = () => {
     switch (active) {
-      case "dashboard":     return <Dashboard key="dashboard" events={events} />;
-      case "events":        return <EventManagement key="events" events={events} setEvents={setEvents} fetchEvents={fetchEvents} />;
+      case "dashboard": return <Dashboard key="dashboard" events={events} />;
+      case "events": return <EventManagement key="events" events={events} setEvents={setEvents} fetchEvents={fetchEvents} />;
       case "registrations": return <Registrations key="registrations" />;
-      case "qr":            return <QRCheckin key="qr" />;
+      case "qr": return <QRCheckin key="qr" />;
       case "notifications": return <Notifications key="notifications" events={events} />;
-      case "gallery":       return <Gallery key="gallery" />;
-      case "feedback":      return <Feedback key="feedback" />;
-      case "profile":       return <Profile key="profile" />;
-      default:              return <Dashboard key="dashboard-default" events={events} />;
+      case "gallery": return <Gallery key="gallery" />;
+      case "feedback": return <Feedback key="feedback" />;
+      case "profile": return <Profile key="profile" />;
+      default: return <Dashboard key="dashboard-default" events={events} />;
     }
   };
 
@@ -667,12 +1033,15 @@ export default function OrganizerPanel() {
     <div className="flex h-screen bg-[#fdf6f0] font-sans overflow-hidden">
       {/* Sidebar */}
       <aside className={`${sidebarOpen ? "w-64" : "w-0 overflow-hidden"} transition-all duration-300 bg-white border-r border-orange-100 flex flex-col shrink-0`}>
+        {/* Brand */}
         <div className="px-6 py-5 border-b border-orange-100">
           <span className="text-2xl font-extrabold text-orange-500 tracking-tight">
             Nex<span className="text-purple-600">Event</span>
           </span>
           <p className="text-xs text-gray-400 mt-0.5">Organizer Panel</p>
         </div>
+
+        {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {sidebarItems.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setActive(id)}
@@ -686,9 +1055,14 @@ export default function OrganizerPanel() {
             </button>
           ))}
         </nav>
+
+        {/* Logout */}
         <div className="px-3 py-4 border-t border-orange-100">
           <button
-            onClick={() => window.location.href = "/"}
+            onClick={() => {
+              localStorage.removeItem("token");
+              window.location.href = "/";
+            }}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-all">
             <LogOut size={18} />
             Logout
@@ -698,6 +1072,7 @@ export default function OrganizerPanel() {
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Topbar */}
         <header className="bg-white border-b border-orange-100 px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -706,14 +1081,19 @@ export default function OrganizerPanel() {
             </button>
             <h1 className="text-lg font-bold text-gray-800">{activeLabel}</h1>
           </div>
+
           <div className="flex items-center gap-3">
             <button className="relative p-2 rounded-lg hover:bg-orange-50 text-gray-500 hover:text-orange-500 transition">
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full"></span>
             </button>
-            <div className="w-9 h-9 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm">O</div>
+            <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-lg font-bold text-white shadow-md shadow-orange-200">
+              {organizer?.fullName?.charAt(0) || "O"}
+            </div>
           </div>
         </header>
+
+        {/* Content */}
         <main className="flex-1 overflow-y-auto p-6">
           {renderActiveView()}
         </main>

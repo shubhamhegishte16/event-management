@@ -21,9 +21,14 @@ export default function BrowseEvents() {
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/events/get-events")
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:5000/api/events/get-events", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => res.json())
-      .then((data) => setEvents(data.events))
+      .then((data) => setEvents(Array.isArray(data.events) ? data.events : []))
       .catch((err) => console.error("Failed to fetch events:", err));
   }, []);
 

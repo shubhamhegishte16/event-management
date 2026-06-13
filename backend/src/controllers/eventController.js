@@ -43,18 +43,19 @@ export const getMyEvents = async (req, res) => {
   }
 };
 
-// @desc    Get all events (admin only)
+// @desc    Get all events (admin sees all; users/organizers see only approved)
 // @route   GET /api/events/get-events
-// @access  Private (Admin only)
+// @access  Private
 export const getEvents = async (req, res) => {
   try {
-    // Check if user is admin
+    let filter = {};
+    // Non-admins only see approved events
     if (req.user.role !== "admin") {
-      return res.status(403).json({ success: false, message: "Access denied. Admin only." });
+      filter = { status: "approved" };
     }
-    
-    const events = await Event.find({});
-    
+
+    const events = await Event.find(filter);
+
     res.json({
       success: true,
       events,

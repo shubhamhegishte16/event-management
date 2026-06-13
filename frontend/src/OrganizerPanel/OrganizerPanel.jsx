@@ -232,12 +232,13 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem("token");
       const res = await axios.post(`http://localhost:${PORT}/api/events/create-event`, {
         title: form.title, category: form.category, date: form.date, venue: form.venue,
         price: Number(form.price), totalTickets: Number(form.totalTickets),
         availableTickets: Number(form.availableTickets),
         organizer: { name: form.organizerName }, status: form.status, image: form.image || ""
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.success && res.data.event) { await fetchEvents(); resetForm(); setShowForm(false); alert("Event created successfully!"); }
     } catch (err) { alert(err.response?.data?.message || "Failed to create event"); }
   };
@@ -245,20 +246,25 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem("token");
       const res = await axios.put(`http://localhost:${PORT}/api/events/update-event/${editingEvent._id}`, {
         title: form.title, category: form.category, date: form.date, venue: form.venue,
         price: Number(form.price), totalTickets: Number(form.totalTickets),
         availableTickets: Number(form.availableTickets),
         organizer: { name: form.organizerName }, status: form.status, image: form.image || ""
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.success) { await fetchEvents(); resetForm(); setShowEditForm(false); setEditingEvent(null); alert("Event updated!"); }
     } catch (err) { alert(err.response?.data?.message || "Failed to update event"); }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this event?")) return;
-    try { await axios.delete(`http://localhost:${PORT}/api/events/delete-event/${id}`); await fetchEvents(); alert("Deleted!"); }
-    catch (err) { alert(err.response?.data?.message || "Failed to delete event"); }
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:${PORT}/api/events/delete-event/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      await fetchEvents();
+      alert("Deleted!");
+    } catch (err) { alert(err.response?.data?.message || "Failed to delete event"); }
   };
 
   const handleEdit = (ev) => {
@@ -556,7 +562,10 @@ export default function OrganizerPanel() {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`http://localhost:${PORT}/api/events/get-events`);
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`http://localhost:${PORT}/api/events/getMyEvents`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.data?.success && Array.isArray(res.data.events)) {
         setEvents(res.data.events);
       } else {

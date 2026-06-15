@@ -101,6 +101,7 @@ export default function Tickets() {
   }, [id]);
 
   const getTicketStatus = (ticket) => {
+    if (ticket.status === "cancelled") return "Cancelled";
     if (!ticket.event) return "Cancelled";
     if (ticket.paymentStatus === "failed") return "Cancelled";
     if (!ticket.event?.date) return "Cancelled";

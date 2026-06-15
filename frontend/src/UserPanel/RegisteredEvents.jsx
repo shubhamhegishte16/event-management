@@ -541,55 +541,6 @@ export default function RegisteredEvents() {
             </div>
           </div>
         )}
-
-
-        {/* QR Code Modal */}
-        {/* {showQRModal && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 text-center shadow-2xl">
-              <div className="mb-4">
-                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <QrCode size={32} className="text-orange-600" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-800">Your Ticket</h3>
-                <p className="text-slate-500 text-sm mt-1">{showQRModal.event?.title}</p>
-              </div>
-
-              <div className="bg-slate-800 p-4 rounded-2xl mb-6 inline-block mx-auto">
-                <div className="w-40 h-40 bg-white rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <Ticket size={50} className="text-slate-800 mx-auto mb-2" />
-                    <div className="text-xs text-slate-600 font-mono">{showQRModal._id?.slice(-8)}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 text-left bg-slate-50 p-4 rounded-xl mb-6">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Ticket Holder:</span>
-                  <span className="font-medium text-slate-800">{showQRModal.attendeeName || "Guest"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Email:</span>
-                  <span className="font-medium text-slate-800">{showQRModal.attendeeEmail || "guest@example.com"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Tickets:</span>
-                  <span className="font-medium text-slate-800">{showQRModal.ticketsBooked || 1}</span>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowQRModal(null)}
-                  className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-all font-medium text-sm"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )} */}
       </div>
 
       {/* Styled JSX scoped block for Custom Scrollbar matching layout mock */}

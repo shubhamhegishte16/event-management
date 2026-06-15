@@ -26,12 +26,12 @@ export default function AudienceFeedback() {
       const token = localStorage.getItem("token");
       
       // Get user's registered events
-      const registrationsRes = await axios.get(`http://localhost:${PORT}/api/registrations/`, {
+      const registrationsRes = await axios.get(`https://event-management-ak5b.onrender.com/api/registrations/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       // Get user's existing feedbacks
-      const feedbacksRes = await axios.get(`http://localhost:${PORT}/api/feedback/my-feedbacks`, {
+      const feedbacksRes = await axios.get(`https://event-management-ak5b.onrender.com/api/feedback/my-feedbacks`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -76,8 +76,8 @@ export default function AudienceFeedback() {
     try {
       const token = localStorage.getItem("token");
       const url = editingFeedback 
-        ? `http://localhost:${PORT}/api/feedback/${editingFeedback._id}`
-        : `http://localhost:${PORT}/api/feedback/create`;
+        ? `https://event-management-ak5b.onrender.com/api/feedback/${editingFeedback._id}`
+        : `https://event-management-ak5b.onrender.com/api/feedback/create`;
       
       const method = editingFeedback ? "put" : "post";
       
@@ -112,7 +112,7 @@ export default function AudienceFeedback() {
     
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:${PORT}/api/feedback/${id}`, {
+      await axios.delete(`https://event-management-ak5b.onrender.com/api/feedback/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert("Feedback deleted");

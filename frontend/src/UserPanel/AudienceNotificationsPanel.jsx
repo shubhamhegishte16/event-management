@@ -14,7 +14,7 @@ export default function AudienceNotifications() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `http://localhost:${PORT}/api/notifications/my-notifications?unreadOnly=${filter === "unread"}`,
+        `https://event-management-ak5b.onrender.com/api/notifications/my-notifications?unreadOnly=${filter === "unread"}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {
@@ -31,7 +31,7 @@ export default function AudienceNotifications() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `http://localhost:${PORT}/api/notifications/my-unread-count`,
+        `https://event-management-ak5b.onrender.com/api/notifications/my-unread-count`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {
@@ -51,7 +51,7 @@ export default function AudienceNotifications() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:${PORT}/api/notifications/mark-read/${id}`,
+        `https://event-management-ak5b.onrender.com/api/notifications/mark-read/${id}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -66,7 +66,7 @@ export default function AudienceNotifications() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:${PORT}/api/notifications/mark-all-read`,
+        `https://event-management-ak5b.onrender.com/api/notifications/mark-all-read`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -82,7 +82,7 @@ export default function AudienceNotifications() {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `http://localhost:${PORT}/api/notifications/${id}`,
+        `https://event-management-ak5b.onrender.com/api/notifications/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchNotifications();

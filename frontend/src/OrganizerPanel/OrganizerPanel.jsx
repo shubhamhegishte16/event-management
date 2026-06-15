@@ -140,7 +140,7 @@ function Dashboard({ events = [] }) {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:${PORT}/api/organizer/dashboard-stats`, {
+      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/organizer/dashboard-stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -250,7 +250,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post(`http://localhost:${PORT}/api/events/create-event`, {
+      const res = await axios.post(`https://event-management-ak5b.onrender.com/api/events/create-event`, {
         title: form.title,
         category: form.category,
         date: form.date,
@@ -274,7 +274,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`http://localhost:${PORT}/api/events/update-event/${editingEvent._id}`, {
+      const res = await axios.put(`https://event-management-ak5b.onrender.com/api/events/update-event/${editingEvent._id}`, {
         title: form.title,
         category: form.category,
         date: form.date,
@@ -307,7 +307,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
     if (!window.confirm("Delete this event?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:${PORT}/api/events/delete-event/${id}`, {
+      await axios.delete(`https://event-management-ak5b.onrender.com/api/events/delete-event/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       await fetchEvents();
@@ -409,7 +409,7 @@ function Registrations() {
         return;
       }
 
-      const res = await axios.get(`http://localhost:${PORT}/api/registrations/organizer`, {
+      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/registrations/organizer`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -437,7 +437,7 @@ function Registrations() {
   const handleCheckIn = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`http://localhost:${PORT}/api/registrations/checkin/${id}`, {}, {
+      const res = await axios.put(`https://event-management-ak5b.onrender.com/api/registrations/checkin/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -560,7 +560,7 @@ function QRCheckin() {
   const fetchRecentCheckins = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:${PORT}/api/registrations/organizer`, {
+      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/registrations/organizer`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success && Array.isArray(res.data.registrations)) {
@@ -614,7 +614,7 @@ function QRCheckin() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        `http://localhost:${PORT}/api/registrations/checkin/${id.trim()}`,
+        `https://event-management-ak5b.onrender.com/api/registrations/checkin/${id.trim()}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -740,7 +740,7 @@ function Notifications({ events = [] }) {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `http://localhost:${PORT}/api/notifications/organizer/event/${eventId}`,
+        `https://event-management-ak5b.onrender.com/api/notifications/organizer/event/${eventId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {
@@ -768,7 +768,7 @@ function Notifications({ events = [] }) {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        `http://localhost:${PORT}/api/notifications/send-to-event/${selectedEventId}`,
+        `https://event-management-ak5b.onrender.com/api/notifications/send-to-event/${selectedEventId}`,
         { title, message: msg, type },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -1018,7 +1018,7 @@ function Feedback() {
   const fetchFeedbacks = async () => {
     try {
       const token = localStorage.getItem("token");
-      let url = `http://localhost:${PORT}/api/feedback/organizer/all`;
+      let url = `https://event-management-ak5b.onrender.com/api/feedback/organizer/all`;
       const params = new URLSearchParams();
       if (selectedEventFilter) params.append("eventId", selectedEventFilter);
       if (ratingFilter) params.append("rating", ratingFilter);
@@ -1039,7 +1039,7 @@ function Feedback() {
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:${PORT}/api/events/getMyEvents`, {
+      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/events/getMyEvents`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) setEvents(res.data.events);
@@ -1056,7 +1056,7 @@ function Feedback() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `http://localhost:${PORT}/api/feedback/organizer/respond/${feedbackId}`,
+        `https://event-management-ak5b.onrender.com/api/feedback/organizer/respond/${feedbackId}`,
         { response: responseText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -1072,7 +1072,7 @@ function Feedback() {
       const token = localStorage.getItem("token");
       const endpoint = currentStatus ? "hide" : "publish";
       await axios.put(
-        `http://localhost:${PORT}/api/feedback/organizer/${endpoint}/${feedbackId}`,
+        `https://event-management-ak5b.onrender.com/api/feedback/organizer/${endpoint}/${feedbackId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -1217,7 +1217,7 @@ function Profile() {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`http://localhost:${PORT}/api/organizer/profile`, {
+        const res = await axios.get(`https://event-management-ak5b.onrender.com/api/organizer/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.data.success) {
@@ -1248,7 +1248,7 @@ function Profile() {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`http://localhost:${PORT}/api/organizer/update-profile`, formData, {
+      const res = await axios.put(`https://event-management-ak5b.onrender.com/api/organizer/update-profile`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.success) {
@@ -1377,7 +1377,7 @@ export default function OrganizerPanel() {
     setError(null);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:${PORT}/api/events/getMyEvents`, {
+      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/events/getMyEvents`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data?.success && Array.isArray(res.data.events)) {
@@ -1399,7 +1399,7 @@ export default function OrganizerPanel() {
     const fetchOrganizer = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`http://localhost:${PORT}/api/organizer/profile`, {
+        const res = await axios.get(`https://event-management-ak5b.onrender.com/api/organizer/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.data.success) setOrganizer(res.data.organizer);

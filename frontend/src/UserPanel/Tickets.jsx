@@ -183,7 +183,7 @@ export default function Tickets() {
                     </h3>
 
                     <p className="text-xs text-orange-500 font-semibold mt-1">
-                      Ticket #{ticket.ticketNumber}
+                      Ticket {ticket.ticketNumber} of {ticket.ticketsBooked}
                     </p>
                   </div>
 
@@ -201,7 +201,9 @@ export default function Tickets() {
 
                   <div className="flex items-center gap-1.5 text-xs text-stone-400 mb-4">
                     <Ticket size={12} className="text-orange-400" />
-                    <span>{ticket.ticketsBooked} Ticket(s)</span>
+                    <span>
+                      Ticket {ticket.ticketNumber} of {ticket.ticketsBooked}
+                    </span>
                   </div>
 
                   <button
@@ -247,7 +249,8 @@ export default function Tickets() {
             <div className="p-4 sm:p-6">
               <h2 className="m-0 mb-1 text-stone-900 text-xl font-black">{selectedTicket.event?.title}</h2>
               <p className="m-0 mb-5 text-stone-400 text-xs">
-                Official entry pass · Valid for {selectedTicket.ticketsBooked} person{selectedTicket.ticketsBooked !== 1 ? "s" : ""}
+                Official entry pass · Ticket {selectedTicket.ticketNumber} of{" "}
+                {selectedTicket.ticketsBooked}
               </p>
 
               <div className="flex flex-col gap-3 mb-5">

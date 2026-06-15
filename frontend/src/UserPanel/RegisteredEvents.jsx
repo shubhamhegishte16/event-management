@@ -39,7 +39,7 @@ export default function RegisteredEvents() {
         return;
       }
 
-      const res = await axios.get(`http://localhost:${PORT}/api/registrations/`, {
+      const res = await axios.get(`https://event-management-ak5b.onrender.com/api/registrations/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -63,7 +63,7 @@ export default function RegisteredEvents() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.delete(`http://localhost:${PORT}/api/registrations/${registrationId}`, {
+      const res = await axios.delete(`https://event-management-ak5b.onrender.com/api/registrations/${registrationId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

@@ -8,7 +8,7 @@ export default function ManageUsers() {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        fetch("http://https://event-management-ak5b.onrender.com/api/admin/users", {
+        fetch("https://event-management-ak5b.onrender.com/api/admin/users", {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((r) => r.json())
@@ -20,7 +20,7 @@ export default function ManageUsers() {
     const handleBan = async (id) => {
         const token = localStorage.getItem("token");
         try {
-            await fetch(`http://https://event-management-ak5b.onrender.com/api/admin/users/${id}/ban`, {
+            await fetch(`https://event-management-ak5b.onrender.com/api/admin/users/${id}/ban`, {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${token}` },
             });

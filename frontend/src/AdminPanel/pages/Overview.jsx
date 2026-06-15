@@ -23,19 +23,19 @@ export default function Overview() {
             .catch(() => {});
 
         // Fetch users count
-        fetch("http://https://event-management-ak5b.onrender.com/api/admin/users", { headers })
+        fetch("https://event-management-ak5b.onrender.com/api/admin/users", { headers })
             .then(r => r.json())
             .then(d => setStats(prev => ({ ...prev, users: d.users?.length || 0 })))
             .catch(() => {});
 
         // Fetch tickets count
-        fetch("http://https://event-management-ak5b.onrender.com/api/admin/tickets", { headers })
+        fetch("https://event-management-ak5b.onrender.com/api/admin/tickets", { headers })
             .then(r => r.json())
             .then(d => setStats(prev => ({ ...prev, tickets: d.tickets?.length || 0 })))
             .catch(() => {});
 
         // Fetch recent events
-        fetch("http://https://event-management-ak5b.onrender.com/api/events", { headers })
+        fetch("https://event-management-ak5b.onrender.com/api/events", { headers })
             .then(r => r.json())
             .then(d => setRecentEvents((d.events || []).slice(0, 5)))
             .catch(() => {});

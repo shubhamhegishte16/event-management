@@ -20,9 +20,9 @@ export default function Analytics() {
 
         // Fetch events, users, and tickets simultaneously
         Promise.all([
-            fetch("http://https://event-management-ak5b.onrender.com/api/events", { headers }).then(r => r.json()),
-            fetch("http://https://event-management-ak5b.onrender.com/api/admin/users", { headers }).then(r => r.json()),
-            fetch("http://https://event-management-ak5b.onrender.com/api/admin/tickets", { headers }).then(r => r.json()),
+            fetch("https://event-management-ak5b.onrender.com/api/events", { headers }).then(r => r.json()),
+            fetch("https://event-management-ak5b.onrender.com/api/admin/users", { headers }).then(r => r.json()),
+            fetch("https://event-management-ak5b.onrender.com/api/admin/tickets", { headers }).then(r => r.json()),
         ])
             .then(([eventsData, usersData, ticketsData]) => {
                 const events = eventsData.events || [];

@@ -136,7 +136,7 @@ function StatCard({ label, value, sub, accent }) {
 function Dashboard({ events = [] }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -152,23 +152,23 @@ function Dashboard({ events = [] }) {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchStats();
   }, [events]);
-  
+
   const today = new Date();
   const upcomingEvents = events.filter(e => new Date(e.date) >= today);
   const completedEvents = events.filter(e => new Date(e.date) < today);
-  
+
   if (loading) {
     return <div className="p-5 text-center">Loading stats...</div>;
   }
-  
+
   return (
     <div>
       <PageHeader title="Dashboard" sub="Welcome back. Here's what's happening." />
-      
+
       <div className="grid grid-cols-4 gap-4 mb-8">
         <StatCard label="Total Events" value={stats?.totalEvents || events.length.toString()} sub="All time" accent />
         <StatCard label="Total Registrations" value={stats?.totalRegistrations?.toString() || "0"} sub="Across all events" />
@@ -550,15 +550,7 @@ function Registrations() {
         )}
       </div>
 
-      {/* Debug info (remove in production) */}
-      {process.env.NODE_ENV === 'development' && registrations.length > 0 && (
-        <div className="mt-4 p-3 bg-gray-50 rounded-xl text-[10px] text-gray-400">
-          <details>
-            <summary>Debug: Registration IDs</summary>
-            <pre>{JSON.stringify(registrations.map(r => ({ id: r._id, eventId: r.event?._id, name: r.attendeeName })), null, 2)}</pre>
-          </details>
-        </div>
-      )}
+
     </div>
   );
 }
@@ -762,7 +754,7 @@ function Notifications({ events = [] }) {
       } else if (err.response?.status === 401) {
         alert("Please login again. Your session may have expired.");
         localStorage.removeItem("token");
-        window.location.href = "/organizer/login";
+        window.location.href = "/login";
       } else {
         alert(err.response?.data?.message || "Failed to send notification");
       }

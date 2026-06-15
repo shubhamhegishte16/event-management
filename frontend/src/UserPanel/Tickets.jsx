@@ -80,21 +80,21 @@ export default function Tickets() {
   return (
     <>
       {/* ── Hero ── */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <p className="m-0 mb-2 text-orange-500 text-xs font-black tracking-widest uppercase">Your tickets</p>
-        <h2 className="m-0 text-stone-900 text-3xl font-black">My Tickets</h2>
+        <h2 className="m-0 text-stone-900 text-2xl sm:text-3xl font-black">My Tickets</h2>
         <p className="mt-2 text-stone-500 text-sm">Manage, view, and download tickets for all your upcoming events.</p>
       </div>
 
       {/* ── Tabs ── */}
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mb-1">
           {TABS.map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`px-4 h-9 rounded-lg text-sm font-semibold border-0 cursor-pointer transition-all ${activeTab === tab
+              className={`px-4 h-9 rounded-lg text-sm font-semibold border-0 cursor-pointer transition-all whitespace-nowrap ${activeTab === tab
                 ? "bg-orange-500 text-white shadow-md shadow-orange-200"
                 : "bg-white/80 text-stone-500 hover:text-orange-500 hover:bg-orange-50"
                 }`}
@@ -103,7 +103,7 @@ export default function Tickets() {
             </button>
           ))}
         </div>
-        <span className="text-stone-400 text-xs font-bold">{filteredTickets.length} tickets</span>
+        <span className="text-stone-400 text-xs font-bold whitespace-nowrap">{filteredTickets.length} tickets</span>
       </div>
 
       {/* ── Ticket list ── */}
@@ -111,7 +111,7 @@ export default function Tickets() {
         <p className="text-center py-12 text-stone-400 text-sm">Loading tickets…</p>
 
       ) : filteredTickets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3 text-stone-400">
+        <div className="flex flex-col items-center justify-center py-16 gap-3 text-stone-400 text-center px-4">
           <Ticket size={40} className="text-stone-300" />
           <h3 className="m-0 text-base font-bold text-stone-500">No {activeTab.toLowerCase()} tickets</h3>
           <p className="m-0 text-sm">You don't have any {activeTab.toLowerCase()} tickets yet.</p>
@@ -130,13 +130,13 @@ export default function Tickets() {
                 {/* Category banner */}
                 <div className={`h-2 w-full ${categoryColors[event?.category] || categoryColors.Other}`} />
 
-                <div className="p-5">
+                <div className="p-4 sm:p-5">
                   {/* Header row */}
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-stone-400 uppercase tracking-wide">
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <span className="text-xs font-bold text-stone-400 uppercase tracking-wide truncate">
                       {event?.category || "Event"}
                     </span>
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${statusStyles[status]}`}>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${statusStyles[status]}`}>
                       {status}
                     </span>
                   </div>
@@ -154,7 +154,7 @@ export default function Tickets() {
                       { icon: <MapPin size={14} />, label: event?.venue || "—" },
                     ].map(({ icon, label }) => (
                       <div key={label} className="flex items-center gap-2 text-stone-500 text-xs [&>svg]:text-orange-400 [&>svg]:flex-shrink-0">
-                        {icon}{label}
+                        {icon}<span className="truncate">{label}</span>
                       </div>
                     ))}
                   </div>
@@ -183,11 +183,11 @@ export default function Tickets() {
       {/* ── Ticket modal ── */}
       {selectedTicket && (
         <div
-          className="fixed inset-0 z-50 grid place-items-center p-6 bg-stone-900/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 grid place-items-center p-3 sm:p-6 bg-stone-900/50 backdrop-blur-sm"
           onClick={() => setSelectedTicket(null)}
         >
           <div
-            className="relative w-full max-w-md rounded-2xl bg-[#fffaf5] border border-white/30 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-md rounded-2xl bg-[#fffaf5] border border-white/30 shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close */}
@@ -208,7 +208,7 @@ export default function Tickets() {
               </span>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <h2 className="m-0 mb-1 text-stone-900 text-xl font-black">{selectedTicket.event?.title}</h2>
               <p className="m-0 mb-5 text-stone-400 text-xs">
                 Official entry pass · Valid for {selectedTicket.ticketsBooked} person{selectedTicket.ticketsBooked !== 1 ? "s" : ""}
@@ -227,9 +227,9 @@ export default function Tickets() {
                 ].map(({ icon, label, value }) => (
                   <div key={label} className="flex items-start gap-3 p-3 rounded-lg bg-orange-50/60 [&>svg]:text-orange-500 [&>svg]:flex-shrink-0 [&>svg]:mt-0.5">
                     {icon}
-                    <div>
+                    <div className="min-w-0">
                       <strong className="block text-xs font-bold text-stone-500 uppercase tracking-wide">{label}</strong>
-                      <span className="text-sm text-stone-700 font-semibold">{value}</span>
+                      <span className="text-sm text-stone-700 font-semibold break-words">{value}</span>
                     </div>
                   </div>
                 ))}
@@ -249,7 +249,7 @@ export default function Tickets() {
                   />              </div>
                 <div className="text-center">
                   <p className="m-0 text-xs text-stone-400 font-bold uppercase tracking-wide mb-1">Booking ID</p>
-                  <code className="text-sm font-mono font-bold text-stone-700 bg-stone-100 px-3 py-1 rounded-lg">
+                  <code className="text-sm font-mono font-bold text-stone-700 bg-stone-100 px-3 py-1 rounded-lg break-all">
                     {selectedTicket._id}
                   </code>
                 </div>

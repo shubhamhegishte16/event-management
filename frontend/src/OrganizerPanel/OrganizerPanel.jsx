@@ -49,7 +49,7 @@ function Badge({ status }) {
   };
   const cls = map[status] || "bg-gray-100 text-gray-500";
   return (
-    <span className={`text-[11px] font-bold px-[10px] py-1 rounded-full tracking-wide ${cls}`}>
+    <span className={`text-[11px] font-bold px-[10px] py-1 rounded-full tracking-wide whitespace-nowrap ${cls}`}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
@@ -78,7 +78,7 @@ function Btn({ children, onClick, variant = "primary", type = "button", full }) 
     <button
       type={type}
       onClick={onClick}
-      className={`text-[13px] font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all tracking-[0.01em] ${styles[variant]} ${full ? "w-full" : ""}`}
+      className={`text-[13px] font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all tracking-[0.01em] whitespace-nowrap ${styles[variant]} ${full ? "w-full" : ""}`}
     >
       {children}
     </button>
@@ -105,9 +105,9 @@ function Input({ label, value, onChange, type = "text", placeholder, required, a
 // ── PAGE HEADER ──
 function PageHeader({ title, sub }) {
   return (
-    <div className="mb-7">
-      <h2 className="text-[22px] font-extrabold text-gray-800 m-0">{title}</h2>
-      {sub && <p className="text-[13px] text-gray-400 mt-1">{sub}</p>}
+    <div className="mb-5 sm:mb-7">
+      <h2 className="text-lg sm:text-[22px] font-extrabold text-gray-800 m-0">{title}</h2>
+      {sub && <p className="text-xs sm:text-[13px] text-gray-400 mt-1">{sub}</p>}
     </div>
   );
 }
@@ -115,7 +115,7 @@ function PageHeader({ title, sub }) {
 // ── CARD ──
 function Card({ children, className = "" }) {
   return (
-    <div className={`bg-white rounded-2xl border border-orange-100 px-6 py-5 ${className}`}>
+    <div className={`bg-white rounded-2xl border border-orange-100 px-4 sm:px-6 py-4 sm:py-5 ${className}`}>
       {children}
     </div>
   );
@@ -124,9 +124,9 @@ function Card({ children, className = "" }) {
 // ── STAT CARD ──
 function StatCard({ label, value, sub, accent }) {
   return (
-    <div className={`rounded-2xl px-6 py-5 flex flex-col gap-1 border ${accent ? "bg-orange-500 border-transparent shadow-md shadow-orange-200" : "bg-white border-orange-100"}`}>
+    <div className={`rounded-2xl px-4 sm:px-6 py-4 sm:py-5 flex flex-col gap-1 border ${accent ? "bg-orange-500 border-transparent shadow-md shadow-orange-200" : "bg-white border-orange-100"}`}>
       <span className={`text-[10px] font-bold uppercase tracking-[0.1em] ${accent ? "text-white/70" : "text-gray-400"}`}>{label}</span>
-      <span className={`text-[32px] font-extrabold leading-none ${accent ? "text-white" : "text-gray-800"}`}>{value}</span>
+      <span className={`text-2xl sm:text-[32px] font-extrabold leading-none ${accent ? "text-white" : "text-gray-800"}`}>{value}</span>
       {sub && <span className={`text-[11px] ${accent ? "text-white/60" : "text-gray-400"}`}>{sub}</span>}
     </div>
   );
@@ -169,14 +169,14 @@ function Dashboard({ events = [] }) {
     <div>
       <PageHeader title="Dashboard" sub="Welcome back. Here's what's happening." />
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="Total Events" value={stats?.totalEvents || events.length.toString()} sub="All time" accent />
         <StatCard label="Total Registrations" value={stats?.totalRegistrations?.toString() || "0"} sub="Across all events" />
         <StatCard label="Available Seats" value={stats?.availableSeats?.toString() || "0"} sub="Remaining capacity" />
         <StatCard label="Total Capacity" value={stats?.totalCapacity?.toString() || "0"} sub="Overall seats" />
       </div>
 
-      <div className="grid grid-cols-2 gap-5 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
         <div>
           <h3 className="text-sm font-bold text-gray-800 mb-3">Upcoming Events ({upcomingEvents.length})</h3>
           <div className="flex flex-col gap-2.5">
@@ -208,17 +208,17 @@ function Dashboard({ events = [] }) {
             const registered = (stats?.totalRegistrationsPerEvent?.[ev._id]) || (ev.totalTickets - ev.availableTickets);
             const pct = ev.totalTickets > 0 ? (registered / ev.totalTickets) * 100 : 0;
             return (
-              <Card key={ev._id} className="flex items-center justify-between gap-4 !py-4 !px-5">
-                <div className="flex-1">
-                  <p className="font-bold text-sm text-gray-800 m-0">{ev.title}</p>
+              <Card key={ev._id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 !py-4 !px-4 sm:!px-5">
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-gray-800 m-0 truncate">{ev.title}</p>
                   <p className="text-xs text-gray-400 mt-0.5">{new Date(ev.date).toLocaleDateString()} · {ev.category}</p>
                 </div>
-                <div className="flex items-center gap-4 shrink-0">
+                <div className="flex items-center gap-3 sm:gap-4 shrink-0 flex-wrap">
                   <div className="text-right">
                     <p className="text-[11px] text-gray-400">Seats</p>
                     <p className="text-[13px] font-bold text-gray-800">{registered}/{ev.totalTickets}</p>
                   </div>
-                  <div className="w-20 bg-orange-50 rounded-full h-1">
+                  <div className="w-16 sm:w-20 bg-orange-50 rounded-full h-1">
                     <div className="bg-orange-500 h-1 rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                   <Badge status={ev.status} />
@@ -340,7 +340,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-7">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 sm:mb-7">
         <PageHeader title="Event Management" sub="Create, edit or remove your events." />
         <Btn onClick={() => { resetForm(); setShowForm(!showForm); setShowEditForm(false); setEditingEvent(null); }}>+ Create Event</Btn>
       </div>
@@ -349,11 +349,11 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
         <Card className="mb-5">
           <h3 className="text-sm font-bold text-gray-800 mt-0 mb-4">{showEditForm ? "Edit Event" : "New Event"}</h3>
           <form onSubmit={showEditForm ? handleUpdate : handleCreate}>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2"><Input label="Event Title *" required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Annual Tech Meetup" /></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2"><Input label="Event Title *" required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Annual Tech Meetup" /></div>
               <Input label="Category *" required as="select" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>{categories.map(c => <option key={c}>{c}</option>)}</Input>
               <Input label="Date *" type="date" required value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
-              <div className="col-span-2"><Input label="Venue *" required value={form.venue} onChange={e => setForm({ ...form, venue: e.target.value })} placeholder="e.g. Mumbai Convention Center" /></div>
+              <div className="sm:col-span-2"><Input label="Venue *" required value={form.venue} onChange={e => setForm({ ...form, venue: e.target.value })} placeholder="e.g. Mumbai Convention Center" /></div>
               <Input label="Price (₹) *" type="number" required value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="e.g. 499" />
               <Input label="Total Tickets *" type="number" required value={form.totalTickets} onChange={e => setForm({ ...form, totalTickets: e.target.value })} placeholder="e.g. 100" />
               <Input label="Available Tickets *" type="number" required value={form.availableTickets} onChange={e => setForm({ ...form, availableTickets: e.target.value })} placeholder="e.g. 100" />
@@ -361,7 +361,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
               {/* ← Status field removed: admin controls approval, not organizer */}
               <Input label="Image URL (optional)" value={form.image} onChange={e => setForm({ ...form, image: e.target.value })} placeholder="https://example.com/image.jpg" />
             </div>
-            <div className="flex gap-2.5 mt-4">
+            <div className="flex flex-col sm:flex-row gap-2.5 mt-4">
               <Btn type="submit">{showEditForm ? "Update Event" : "Save Event"}</Btn>
               <Btn variant="ghost" onClick={() => { setShowForm(false); setShowEditForm(false); setEditingEvent(null); resetForm(); }}>Cancel</Btn>
             </div>
@@ -376,13 +376,13 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
 
       <div className="flex flex-col gap-2.5">
         {events.length > 0 ? events.map(ev => (
-          <Card key={ev._id} className="flex items-center justify-between gap-4 !py-4 !px-5">
-            <div className="flex-1">
+          <Card key={ev._id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 !py-4 !px-4 sm:!px-5">
+            <div className="flex-1 min-w-0">
               <p className="font-bold text-sm text-gray-800 m-0">{ev.title}</p>
               <p className="text-xs text-gray-400 mt-0.5">{new Date(ev.date).toLocaleDateString()} · {ev.category} · Available: {ev.availableTickets}/{ev.totalTickets} seats · ₹{ev.price}</p>
               {ev.organizer?.name && <p className="text-[11px] text-gray-400 mt-0.5">Organizer: {ev.organizer.name}</p>}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
               <Badge status={ev.status} />
               <Btn variant="outline" onClick={() => handleEdit(ev)}>Edit</Btn>
               <Btn variant="danger" onClick={() => handleDelete(ev._id)}>Delete</Btn>
@@ -474,7 +474,7 @@ function Registrations() {
       <PageHeader title="Registrations" sub="View participants and attendance records." />
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 border border-orange-100">
           <div className="text-2xl font-bold text-orange-600">{registrations.length}</div>
           <div className="text-xs text-gray-400">Total Registrations</div>
@@ -493,10 +493,10 @@ function Registrations() {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-5">
+      <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
         {["participants", "attendance"].map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`text-[13px] font-semibold px-4 py-2 rounded-xl cursor-pointer border-none transition-all ${tab === t ? "bg-orange-500 text-white shadow-md shadow-orange-200" : "bg-white text-gray-500 border border-orange-100"}`}>
+            className={`text-[13px] font-semibold px-4 py-2 rounded-xl cursor-pointer border-none transition-all whitespace-nowrap ${tab === t ? "bg-orange-500 text-white shadow-md shadow-orange-200" : "bg-white text-gray-500 border border-orange-100"}`}>
             {t === "participants" ? "Participant List" : "Attendance List"}
           </button>
         ))}
@@ -509,44 +509,46 @@ function Registrations() {
             <div className="mt-2 text-xs">When audience members register for your events, they'll appear here.</div>
           </div>
         ) : (
-          <table className="w-full border-collapse text-[13px]">
-            <thead>
-              <tr className="bg-orange-50">
-                {["Name", "Email", "Event", "Tickets", tab === "participants" ? "Status" : "Check-in Status"].map(h => (
-                  <th key={h} className="text-left px-5 py-3 text-[10px] font-bold text-orange-500 uppercase tracking-[0.1em]">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {registrations.map((registration, i) => (
-                <tr key={registration._id} className={`border-b border-orange-50 ${i % 2 === 0 ? "bg-white" : "bg-orange-50/40"}`}>
-                  <td className="px-5 py-3 font-semibold text-gray-800">{registration.attendeeName}</td>
-                  <td className="px-5 py-3 text-gray-400">{registration.attendeeEmail}</td>
-                  <td className="px-5 py-3 text-gray-500">{registration.event?.title || "Event Deleted"}</td>
-                  <td className="px-5 py-3 text-gray-500">{registration.ticketsBooked || 1}</td>
-                  <td className="px-5 py-3">
-                    {tab === "participants" ? (
-                      <Badge status="confirmed" />
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        <span className={`text-[11px] font-bold px-[10px] py-1 rounded-full ${registration.checkInStatus ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
-                          {registration.checkInStatus ? "✓ Checked In" : "○ Not Checked In"}
-                        </span>
-                        {!registration.checkInStatus && (
-                          <button
-                            onClick={() => handleCheckIn(registration._id)}
-                            className="bg-orange-100 hover:bg-orange-200 text-orange-600 text-[10px] font-bold px-2.5 py-1 rounded-lg border-none cursor-pointer transition-colors"
-                          >
-                            Check In
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-[13px] min-w-[640px]">
+              <thead>
+                <tr className="bg-orange-50">
+                  {["Name", "Email", "Event", "Tickets", tab === "participants" ? "Status" : "Check-in Status"].map(h => (
+                    <th key={h} className="text-left px-5 py-3 text-[10px] font-bold text-orange-500 uppercase tracking-[0.1em] whitespace-nowrap">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {registrations.map((registration, i) => (
+                  <tr key={registration._id} className={`border-b border-orange-50 ${i % 2 === 0 ? "bg-white" : "bg-orange-50/40"}`}>
+                    <td className="px-5 py-3 font-semibold text-gray-800 whitespace-nowrap">{registration.attendeeName}</td>
+                    <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{registration.attendeeEmail}</td>
+                    <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{registration.event?.title || "Event Deleted"}</td>
+                    <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{registration.ticketsBooked || 1}</td>
+                    <td className="px-5 py-3">
+                      {tab === "participants" ? (
+                        <Badge status="confirmed" />
+                      ) : (
+                        <div className="flex items-center gap-3 whitespace-nowrap">
+                          <span className={`text-[11px] font-bold px-[10px] py-1 rounded-full ${registration.checkInStatus ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+                            {registration.checkInStatus ? "✓ Checked In" : "○ Not Checked In"}
+                          </span>
+                          {!registration.checkInStatus && (
+                            <button
+                              onClick={() => handleCheckIn(registration._id)}
+                              className="bg-orange-100 hover:bg-orange-200 text-orange-600 text-[10px] font-bold px-2.5 py-1 rounded-lg border-none cursor-pointer transition-colors"
+                            >
+                              Check In
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -611,7 +613,7 @@ function QRCheckin() {
   return (
     <div>
       <PageHeader title="QR Check-In" sub="Scan attendee QR codes to verify attendance." />
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card>
           <h3 className="text-sm font-bold text-gray-800 mt-0 mb-4">Scan QR Code</h3>
           <div className="bg-orange-50 rounded-xl flex items-center justify-center h-44 border-2 border-dashed border-orange-200 mb-4">
@@ -620,7 +622,7 @@ function QRCheckin() {
               <p className="text-[11px] m-0">Camera scanner goes here</p>
             </div>
           </div>
-          <form onSubmit={handleScan} className="flex gap-2">
+          <form onSubmit={handleScan} className="flex flex-col sm:flex-row gap-2">
             <input value={input} onChange={e => setInput(e.target.value)}
               className="flex-1 border border-orange-100 rounded-xl px-3 py-[9px] text-[13px] outline-none focus:border-orange-300 transition-colors"
               placeholder="Or enter ticket ID manually" />
@@ -644,12 +646,12 @@ function QRCheckin() {
               <p className="text-gray-400 text-[13px] m-0">No checked-in attendees yet.</p>
             ) : (
               recentCheckins.map(p => (
-                <div key={p.id} className="flex items-center justify-between border-b border-orange-50/60 pb-2 last:border-b-0">
-                  <div>
-                    <p className="font-semibold text-[13px] text-gray-800 m-0">{p.name}</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">{p.event}</p>
+                <div key={p.id} className="flex items-center justify-between gap-3 border-b border-orange-50/60 pb-2 last:border-b-0">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[13px] text-gray-800 m-0 truncate">{p.name}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5 truncate">{p.event}</p>
                   </div>
-                  <span className="text-[11px] font-bold bg-orange-50 text-orange-500 px-[10px] py-1 rounded-full">Checked in</span>
+                  <span className="text-[11px] font-bold bg-orange-50 text-orange-500 px-[10px] py-1 rounded-full shrink-0">Checked in</span>
                 </div>
               ))
             )}
@@ -797,13 +799,13 @@ function Notifications({ events = [] }) {
               </select>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {["announcement", "reminder", "update"].map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setType(t)}
-                  className={`text-[13px] font-semibold px-4 py-2 rounded-xl cursor-pointer border-none transition-all ${type === t
+                  className={`text-[13px] font-semibold px-4 py-2 rounded-xl cursor-pointer border-none transition-all whitespace-nowrap ${type === t
                     ? "bg-orange-500 text-white shadow-md shadow-orange-200"
                     : "bg-orange-50 text-gray-500"
                     }`}
@@ -875,7 +877,7 @@ function Notifications({ events = [] }) {
             <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto">
               {sentNotifications.map((notif) => (
                 <div key={notif._id} className="border border-orange-100 rounded-xl p-3">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                     <span className="text-[10px] font-bold uppercase bg-orange-50 text-orange-500 px-2 py-0.5 rounded">
                       {notif.type}
                     </span>
@@ -889,7 +891,7 @@ function Notifications({ events = [] }) {
                   <p className="text-[11px] text-gray-500 mt-1 m-0">
                     {notif.message}
                   </p>
-                  <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-400">
+                  <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-400 flex-wrap">
                     <span>📨 Sent to {notif.isBroadcast ? "all attendees" : "1 attendee"}</span>
                     <span>👁️ {notif.isRead ? "Read" : "Unread"}</span>
                   </div>
@@ -1001,7 +1003,7 @@ function Gallery({ events = [] }) {
           </div>
         </Card>
       ) : (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {images.map((img) => (
             <div key={img._id} className="group relative rounded-xl overflow-hidden border border-orange-100 bg-white shadow-sm hover:shadow-md transition-all">
               <div className="aspect-square cursor-pointer overflow-hidden" onClick={() => setViewImage(img)}>
@@ -1015,7 +1017,7 @@ function Gallery({ events = [] }) {
                   <button
                     type="button"
                     onClick={() => handleDelete(img._id)}
-                    className="w-6 h-6 flex items-center justify-center rounded-lg bg-red-50 text-red-400 border-0 cursor-pointer hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                    className="w-6 h-6 flex items-center justify-center rounded-lg bg-red-50 text-red-400 border-0 cursor-pointer hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 sm:opacity-0"
                   >
                     <X size={12} />
                   </button>
@@ -1028,7 +1030,7 @@ function Gallery({ events = [] }) {
 
       {/* Lightbox */}
       {viewImage && (
-        <div className="fixed inset-0 z-[9999] grid place-items-center p-6 bg-black/60 backdrop-blur-sm" onClick={() => setViewImage(null)}>
+        <div className="fixed inset-0 z-[9999] grid place-items-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm" onClick={() => setViewImage(null)}>
           <div className="relative max-w-2xl w-full rounded-2xl bg-white shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <button type="button" onClick={() => setViewImage(null)} className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 shadow-md border-0 cursor-pointer hover:bg-white transition-colors">
               <X size={16} />
@@ -1166,7 +1168,7 @@ function Feedback() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl p-4 border border-orange-100">
             <div className="text-2xl font-bold text-orange-600">{stats.total}</div>
             <div className="text-xs text-gray-400">Total Feedbacks</div>
@@ -1187,11 +1189,11 @@ function Feedback() {
       )}
 
       {/* Filters */}
-      <div className="flex gap-3 mb-5">
+      <div className="flex flex-col sm:flex-row gap-3 mb-5">
         <select
           value={selectedEventFilter}
           onChange={(e) => setSelectedEventFilter(e.target.value)}
-          className="border border-orange-100 rounded-xl px-3 py-2 text-[13px] bg-white outline-none"
+          className="border border-orange-100 rounded-xl px-3 py-2 text-[13px] bg-white outline-none w-full sm:w-auto"
         >
           <option value="">All Events</option>
           {events.map(event => (
@@ -1202,7 +1204,7 @@ function Feedback() {
         <select
           value={ratingFilter}
           onChange={(e) => setRatingFilter(e.target.value)}
-          className="border border-orange-100 rounded-xl px-3 py-2 text-[13px] bg-white outline-none"
+          className="border border-orange-100 rounded-xl px-3 py-2 text-[13px] bg-white outline-none w-full sm:w-auto"
         >
           <option value="">All Ratings</option>
           <option value="5">5 Stars</option>
@@ -1223,8 +1225,8 @@ function Feedback() {
         <div className="space-y-3">
           {feedbacks.map((fb) => (
             <Card key={fb._id}>
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2 flex-wrap">
                     <span className="font-semibold text-gray-800">{fb.audienceName}</span>
                     <StarDisplay rating={fb.rating} />
@@ -1246,19 +1248,19 @@ function Feedback() {
                   )}
                 </div>
 
-                <div className="flex gap-2 ml-4">
+                <div className="flex gap-2 sm:ml-4 flex-wrap">
                   <button
                     onClick={() => {
                       setSelectedFeedback(fb);
                       setResponseText(fb.organizerResponse || "");
                     }}
-                    className="px-3 py-1.5 text-[11px] bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100"
+                    className="px-3 py-1.5 text-[11px] bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 whitespace-nowrap"
                   >
                     {fb.organizerResponded ? "Edit Response" : "Respond"}
                   </button>
                   <button
                     onClick={() => handleTogglePublish(fb._id, fb.isPublished)}
-                    className={`px-3 py-1.5 text-[11px] rounded-lg ${fb.isPublished
+                    className={`px-3 py-1.5 text-[11px] rounded-lg whitespace-nowrap ${fb.isPublished
                       ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
                       }`}
@@ -1275,7 +1277,7 @@ function Feedback() {
       {/* Response Modal */}
       {selectedFeedback && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-gray-800 mb-4">
               Respond to {selectedFeedback.audienceName}
             </h3>
@@ -1295,7 +1297,7 @@ function Feedback() {
               className="w-full border border-orange-100 rounded-xl px-3 py-2 text-[13px] resize-none focus:outline-none focus:border-orange-300"
               placeholder="Write your response here..."
             />
-            <div className="flex gap-3 mt-4">
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
               <button
                 onClick={() => handleRespond(selectedFeedback._id)}
                 className="flex-1 bg-orange-500 text-white py-2 rounded-xl hover:bg-orange-600"
@@ -1425,24 +1427,24 @@ function Profile() {
 
       {/* Profile Header */}
       <Card className="mb-5">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center text-2xl font-extrabold text-white shadow-md shadow-orange-200">
+            <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center text-2xl font-extrabold text-white shadow-md shadow-orange-200 shrink-0">
               {organizer.fullName.charAt(0)}
             </div>
 
-            <div>
-              <h3 className="text-lg font-bold text-orange-800">
+            <div className="min-w-0">
+              <h3 className="text-lg font-bold text-orange-800 truncate">
                 {organizer.fullName}
               </h3>
 
-              <p className="text-orange-400 text-sm">
+              <p className="text-orange-400 text-sm truncate">
                 {organizer.orgName}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <Badge status={organizer.status} />
 
             {isEditing && (
@@ -1465,7 +1467,7 @@ function Profile() {
           Personal Information
         </h3>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {isEditing ? (
             <input
               type="text"
@@ -1516,7 +1518,7 @@ function Profile() {
 
           {
             isEditing && (
-              <div className="mt-5 flex justify-end">
+              <div className="mt-5 flex justify-end sm:col-span-2">
                 <Btn onClick={handleSave}>
                   Save Changes
                 </Btn>
@@ -1532,7 +1534,7 @@ function Profile() {
           Address Information
         </h3>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {isEditing ? (
             <input
               type="text"
@@ -1605,7 +1607,7 @@ function Profile() {
           Verification Details
         </h3>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InfoBox
             icon={<ShieldCheck size={18} className="text-orange-500" />}
             label="ID Type"
@@ -1651,16 +1653,16 @@ function Profile() {
 function InfoBox({ icon, label, value }) {
   return (
     <div className="border border-orange-100 rounded-xl p-4 flex gap-3">
-      <div className="text-orange-500 mt-0.5">
+      <div className="text-orange-500 mt-0.5 shrink-0">
         {icon}
       </div>
 
-      <div>
+      <div className="min-w-0">
         <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">
           {label}
         </p>
 
-        <p className="text-sm font-semibold text-gray-800 mt-1">
+        <p className="text-sm font-semibold text-gray-800 mt-1 break-words">
           {value}
         </p>
       </div>
@@ -1671,7 +1673,7 @@ function InfoBox({ icon, label, value }) {
 // ── MAIN EXPORT ──
 export default function OrganizerPanel() {
   const [active, setActive] = useState("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1727,6 +1729,12 @@ export default function OrganizerPanel() {
     fetchOrganizer();
   }, []);
 
+  // Close mobile sidebar whenever a nav item is selected
+  const handleSelect = (id) => {
+    setActive(id);
+    setSidebarOpen(false);
+  };
+
   const activeLabel = sidebarItems.find(n => n.id === active)?.label;
 
   if (loading && events.length === 0) {
@@ -1742,7 +1750,7 @@ export default function OrganizerPanel() {
 
   if (error && events.length === 0) {
     return (
-      <div className="flex justify-center items-center h-screen bg-[#fdf6f0]">
+      <div className="flex justify-center items-center h-screen bg-[#fdf6f0] px-4">
         <Card className="text-center max-w-sm">
           <p className="text-red-500 mb-4">Error: {error}</p>
           <Btn onClick={fetchEvents}>Retry</Btn>
@@ -1774,21 +1782,45 @@ export default function OrganizerPanel() {
   };
 
   return (
-    <div className="flex h-screen bg-[#fdf6f0] font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#fdf6f0] font-sans overflow-hidden relative">
+      {/* Mobile overlay backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? "w-64" : "w-0 overflow-hidden"} transition-all duration-300 bg-white border-r border-orange-100 flex flex-col shrink-0`}>
+      <aside
+        className={`
+          fixed lg:static inset-y-0 left-0 z-40
+          w-64 transition-transform duration-300
+          bg-white border-r border-orange-100 flex flex-col shrink-0
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0
+        `}
+      >
         {/* Brand */}
-        <div className="px-6 py-5 border-b border-orange-100">
-          <span className="text-2xl font-extrabold text-orange-500 tracking-tight">
-            Nex<span className="text-purple-600">Event</span>
-          </span>
-          <p className="text-xs text-gray-400 mt-0.5">Organizer Panel</p>
+        <div className="px-6 py-5 border-b border-orange-100 flex items-center justify-between">
+          <div>
+            <span className="text-2xl font-extrabold text-orange-500 tracking-tight">
+              Nex<span className="text-purple-600">Event</span>
+            </span>
+            <p className="text-xs text-gray-400 mt-0.5">Organizer Panel</p>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-2 rounded-lg hover:bg-orange-50 text-gray-500 hover:text-orange-500 transition"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {sidebarItems.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setActive(id)}
+            <button key={id} onClick={() => handleSelect(id)}
               className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all
                 ${active === id
                   ? "bg-orange-500 text-white shadow-md shadow-orange-200"
@@ -1815,30 +1847,30 @@ export default function OrganizerPanel() {
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Topbar */}
-        <header className="bg-white border-b border-orange-100 px-6 py-4 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-4">
+        <header className="bg-white border-b border-orange-100 px-4 sm:px-6 py-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <button onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-orange-50 text-gray-500 hover:text-orange-500 transition">
-              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+              className="p-2 rounded-lg hover:bg-orange-50 text-gray-500 hover:text-orange-500 transition shrink-0">
+              <Menu size={20} />
             </button>
-            <h1 className="text-lg font-bold text-gray-800">{activeLabel}</h1>
+            <h1 className="text-base sm:text-lg font-bold text-gray-800 truncate">{activeLabel}</h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button className="relative p-2 rounded-lg hover:bg-orange-50 text-gray-500 hover:text-orange-500 transition">
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full"></span>
             </button>
-            <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-lg font-bold text-white shadow-md shadow-orange-200">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-orange-500 flex items-center justify-center text-base sm:text-lg font-bold text-white shadow-md shadow-orange-200">
               {organizer?.fullName?.charAt(0) || "O"}
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {renderActiveView()}
         </main>
       </div>

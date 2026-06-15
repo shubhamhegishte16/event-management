@@ -21,7 +21,7 @@ export default function ManageEvents() {
 
     const fetchEvents = () => {
         const token = localStorage.getItem("token");
-        fetch("http://localhost:5000/api/admin/events", {  // ← changed from /api/events
+        fetch("http://https://event-management-ak5b.onrender.com/api/admin/events", {  // ← changed from /api/events
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((r) => r.json())
@@ -35,7 +35,7 @@ export default function ManageEvents() {
     const handleDelete = async (id) => {
         const token = localStorage.getItem("token");
         try {
-            await fetch(`http://localhost:5000/api/admin/events/${id}`, {
+            await fetch(`http://https://event-management-ak5b.onrender.com/api/admin/events/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -50,7 +50,7 @@ export default function ManageEvents() {
     const handleAction = async (id, action) => {
         const token = localStorage.getItem("token");
         try {
-            await fetch(`http://localhost:5000/api/admin/events/${id}/${action}`, {
+            await fetch(`http://https://event-management-ak5b.onrender.com/api/admin/events/${id}/${action}`, {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${token}` },
             });

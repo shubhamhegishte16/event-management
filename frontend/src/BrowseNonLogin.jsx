@@ -102,7 +102,7 @@ export default function BrowseNonLogin({ onBackHome }) {
     (async () => {
       try {
         setLoading(true);
-        const res  = await fetch("http://localhost:5000/api/events");
+        const res  = await fetch("https://event-management-ak5b.onrender.com/api/events");
         const data = await res.json();
         if (data.success && Array.isArray(data.events)) setEvents(data.events);
         else setError("Failed to load events");

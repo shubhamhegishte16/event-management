@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Images, Upload, Trash2, X, CalendarDays, ImagePlus } from "lucide-react";
 
-const API = "http://localhost:5000/api";
+const API = "https://event-management-ak5b.onrender.com/api";
 
 export default function Gallery() {
   const [registeredEvents, setRegisteredEvents] = useState([]);

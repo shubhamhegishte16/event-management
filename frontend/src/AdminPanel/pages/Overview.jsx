@@ -17,25 +17,25 @@ export default function Overview() {
         const headers = { Authorization: `Bearer ${token}` };
 
         // Fetch events count
-        fetch("http://localhost:5000/api/events", { headers })
+        fetch("http://https://event-management-ak5b.onrender.com/api/events", { headers })
             .then(r => r.json())
             .then(d => setStats(prev => ({ ...prev, events: d.events?.length || 0 })))
             .catch(() => {});
 
         // Fetch users count
-        fetch("http://localhost:5000/api/admin/users", { headers })
+        fetch("http://https://event-management-ak5b.onrender.com/api/admin/users", { headers })
             .then(r => r.json())
             .then(d => setStats(prev => ({ ...prev, users: d.users?.length || 0 })))
             .catch(() => {});
 
         // Fetch tickets count
-        fetch("http://localhost:5000/api/admin/tickets", { headers })
+        fetch("http://https://event-management-ak5b.onrender.com/api/admin/tickets", { headers })
             .then(r => r.json())
             .then(d => setStats(prev => ({ ...prev, tickets: d.tickets?.length || 0 })))
             .catch(() => {});
 
         // Fetch recent events
-        fetch("http://localhost:5000/api/events", { headers })
+        fetch("http://https://event-management-ak5b.onrender.com/api/events", { headers })
             .then(r => r.json())
             .then(d => setRecentEvents((d.events || []).slice(0, 5)))
             .catch(() => {});

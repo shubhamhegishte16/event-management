@@ -31,7 +31,7 @@ export default function Tickets() {
       const token = localStorage.getItem("token");
       if (!token) { setLoading(false); return; }
       try {
-        const res = await fetch("http://localhost:5000/api/registrations", {
+        const res = await fetch("https://event-management-ak5b.onrender.com/api/registrations", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -250,4 +250,4 @@ export default function Tickets() {
       )}
     </>
   );
-}
+} 

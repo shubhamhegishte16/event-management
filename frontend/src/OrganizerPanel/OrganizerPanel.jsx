@@ -900,7 +900,7 @@ function Gallery({ events = [] }) {
     if (!eventId) { setImages([]); return; }
     setLoadingImages(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/images/event/${eventId}`, {
+      const res = await fetch(`https://event-management-ak5b.onrender.com/api/images/event/${eventId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -919,7 +919,7 @@ function Gallery({ events = [] }) {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this image?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/images/${id}`, {
+      const res = await fetch(`https://event-management-ak5b.onrender.com/api/images/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -85,7 +85,7 @@ export default function BrowseEvents({ filterType = "browse" }) {
   useEffect(() => {
     const token = localStorage.getItem("token");
     setLoading(true);
-    fetch("http://localhost:5000/api/events", {
+    fetch("https://event-management-ak5b.onrender.com/api/events", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -130,7 +130,7 @@ export default function BrowseEvents({ filterType = "browse" }) {
     if (!token) { navigate("/login"); return; }
     setBooking(true);
     try {
-      const res  = await fetch("http://localhost:5000/api/registrations/register", {
+      const res  = await fetch("https://event-management-ak5b.onrender.com/api/registrations/register", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ eventId: selectedEvent._id, quantity: 1 }),

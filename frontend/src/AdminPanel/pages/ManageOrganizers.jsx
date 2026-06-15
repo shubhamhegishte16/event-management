@@ -9,7 +9,7 @@ export default function ManageOrganizers() {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        fetch("http://localhost:5000/api/admin/organizers", {
+        fetch("http://https://event-management-ak5b.onrender.com/api/admin/organizers", {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((r) => r.json())
@@ -21,7 +21,7 @@ export default function ManageOrganizers() {
     const handleAction = async (id, action) => {
         const token = localStorage.getItem("token");
         try {
-            await fetch(`http://localhost:5000/api/admin/organizers/${id}/${action}`, {
+            await fetch(`http://https://event-management-ak5b.onrender.com/api/admin/organizers/${id}/${action}`, {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${token}` },
             });

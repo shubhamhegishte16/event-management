@@ -84,7 +84,6 @@ export default function BrowseNonLogin({ onBackHome }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [events, setEvents]             = useState([]);
   const [booking, setBooking]           = useState(false);
-  const [bookingSuccess, setBookingSuccess] = useState(false);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
 
@@ -131,33 +130,15 @@ export default function BrowseNonLogin({ onBackHome }) {
     return [{ title: `Results for "${query}"`, events: filtered }];
   }, [query, featuredRows, events]);
 
-  const handleBookTicket = async () => {
+  // Public browse page — visitors are sent to login; logged-in users go straight to their dashboard
+  const handleBookTicket = () => {
     const token = localStorage.getItem("token");
-    if (!token) { navigate("/login"); return; }
-    setBooking(true);
-    try {
-      const res  = await fetch("http://localhost:5000/api/registrations/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ eventId: selectedEvent._id, quantity: 1 }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setBookingSuccess(true);
-        setSelectedEvent((prev) => ({ ...prev, availableTickets: prev.availableTickets - 1 }));
-        setEvents((prev) =>
-          prev.map((e) =>
-            e._id === selectedEvent._id ? { ...e, availableTickets: e.availableTickets - 1 } : e
-          )
-        );
-        setTimeout(() => { setBookingSuccess(false); setSelectedEvent(null); }, 2000);
-      } else {
-        alert(data.message || "Booking failed. Please try again.");
-      }
-    } catch {
-      alert("Something went wrong. Please try again.");
-    } finally {
-      setBooking(false);
+    if (token) {
+      // Already logged in → take them to the dashboard where booking works
+      navigate("/userDashboard");
+    } else {
+      // Not logged in → send to login page
+      navigate("/login");
     }
   };
 
@@ -335,22 +316,16 @@ export default function BrowseNonLogin({ onBackHome }) {
                   </strong>
                 </div>
 
-                {bookingSuccess ? (
-                  <button disabled type="button" className="min-w-[148px] h-11 flex items-center justify-center gap-2 rounded-xl bg-green-500 text-white font-bold text-sm border-0 cursor-default">
-                    ✅ Booked!
-                  </button>
-                ) : (
                   <button
                     onClick={handleBookTicket}
                     type="button"
-                    disabled={booking || selectedEvent.availableTickets === 0}
+                    disabled={selectedEvent.availableTickets === 0}
                     className="min-w-[148px] h-11 flex items-center justify-center gap-2 rounded-xl text-white font-bold text-sm border-0 cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ background: "linear-gradient(135deg,#f97316,#ea580c)", boxShadow: "0 8px 28px rgba(234,88,12,0.35)" }}
                   >
                     <Ticket size={16} />
-                    {selectedEvent.availableTickets === 0 ? "Sold Out" : booking ? "Booking…" : "Book Ticket"}
+                    {selectedEvent.availableTickets === 0 ? "Sold Out" : "Login to Book"}
                   </button>
-                )}
               </div>
             </div>
           </section>

@@ -9,7 +9,7 @@ import FeedbackPage from "./AudienceFeedback.jsx";
 
 const myEvents = ["Registered Events", "Upcoming Events", "Completed Events"];
 
-export default function UserDashboard({ onBackHome }) {
+export default function UserDashboard({ onBackHome, onLogout }) {
   const [activeLink, setActiveLink] = useState("browse");
   const [myEventsOpen, setMyEventsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -28,7 +28,7 @@ export default function UserDashboard({ onBackHome }) {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    onBackHome();
+    onLogout();
   };
 
   const renderContent = () => {

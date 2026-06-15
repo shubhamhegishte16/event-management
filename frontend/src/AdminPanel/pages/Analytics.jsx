@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BarChart3, TrendingUp, Users, Ticket, CalendarDays } from "lucide-react";
 
 export default function Analytics() {
+    // Store analytics data
     const [stats, setStats] = useState({
         totalEvents: 0,
         totalUsers: 0,
@@ -9,12 +10,15 @@ export default function Analytics() {
         totalRevenue: 0,
         categoryBreakdown: [],
     });
+
+    // Loading state while fetching dashboard data
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
         const headers = { Authorization: `Bearer ${token}` };
 
+        // Fetch events, users, and tickets simultaneously
         Promise.all([
             fetch("http://localhost:5000/api/events", { headers }).then(r => r.json()),
             fetch("http://localhost:5000/api/admin/users", { headers }).then(r => r.json()),
@@ -25,18 +29,21 @@ export default function Analytics() {
                 const users = usersData.users || [];
                 const tickets = ticketsData.tickets || [];
 
-                // Category breakdown
+                // Calculate event count by category
                 const catMap = {};
                 events.forEach((e) => {
                     catMap[e.category] = (catMap[e.category] || 0) + 1;
                 });
-                const categoryBreakdown = Object.entries(catMap).map(([name, count]) => ({
-                    name,
-                    count,
-                    percent: Math.round((count / events.length) * 100),
-                })).sort((a, b) => b.count - a.count);
 
-                // Revenue estimate
+                const categoryBreakdown = Object.entries(catMap)
+                    .map(([name, count]) => ({
+                        name,
+                        count,
+                        percent: Math.round((count / events.length) * 100),
+                    }))
+                    .sort((a, b) => b.count - a.count);
+
+                // Estimate total revenue from sold tickets
                 const totalRevenue = tickets.reduce((sum, t) => {
                     return sum + (t.eventId?.price || 0) * (t.quantity || 1);
                 }, 0);
@@ -53,11 +60,17 @@ export default function Analytics() {
             .finally(() => setLoading(false));
     }, []);
 
+    // Colors used for category progress bars
     const categoryColors = [
-        "bg-orange-400", "bg-purple-400", "bg-blue-400",
-        "bg-green-400", "bg-pink-400", "bg-yellow-400",
+        "bg-orange-400",
+        "bg-purple-400",
+        "bg-blue-400",
+        "bg-green-400",
+        "bg-pink-400",
+        "bg-yellow-400",
     ];
 
+    // Summary cards displayed at the top
     const summaryCards = [
         { label: "Total Events", value: stats.totalEvents, icon: CalendarDays, bg: "bg-orange-50", text: "text-orange-500" },
         { label: "Total Users", value: stats.totalUsers, icon: Users, bg: "bg-purple-50", text: "text-purple-500" },
@@ -68,7 +81,7 @@ export default function Analytics() {
     return (
         <div className="space-y-6">
 
-            {/* Summary Cards */}
+            {/* Dashboard Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {summaryCards.map(({ label, value, icon: Icon, bg, text }) => (
                     <div key={label} className="bg-white rounded-2xl border border-orange-100 p-5">
@@ -81,7 +94,7 @@ export default function Analytics() {
                 ))}
             </div>
 
-            {/* Category Breakdown */}
+            {/* Event Category Statistics */}
             <div className="bg-white rounded-2xl border border-orange-100 p-6">
                 <div className="flex items-center gap-2 mb-5">
                     <BarChart3 size={18} className="text-orange-500" />
@@ -100,6 +113,8 @@ export default function Analytics() {
                                     <span className="text-sm font-medium text-gray-700">{name}</span>
                                     <span className="text-xs text-gray-400">{count} events ({percent}%)</span>
                                 </div>
+
+                                {/* Visual category percentage bar */}
                                 <div className="w-full bg-gray-100 rounded-full h-2.5">
                                     <div
                                         className={`h-2.5 rounded-full ${categoryColors[i % categoryColors.length]} transition-all duration-700`}
@@ -112,7 +127,7 @@ export default function Analytics() {
                 )}
             </div>
 
-            {/* Quick Stats Grid */}
+            {/* Additional Analytics Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-white rounded-2xl border border-orange-100 p-6">
                     <h3 className="font-bold text-gray-800 mb-1">Avg. Tickets per Event</h3>
@@ -123,6 +138,7 @@ export default function Analytics() {
                     </p>
                     <p className="text-xs text-gray-400 mt-1">Based on all sold tickets</p>
                 </div>
+
                 <div className="bg-white rounded-2xl border border-orange-100 p-6">
                     <h3 className="font-bold text-gray-800 mb-1">Avg. Revenue per Ticket</h3>
                     <p className="text-3xl font-extrabold text-purple-500 mt-2">
@@ -136,5 +152,3 @@ export default function Analytics() {
         </div>
     );
 }
-
-

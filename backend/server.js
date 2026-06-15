@@ -14,6 +14,8 @@ import organizerRoutes from "./src/routes/organizerRoutes.js";
 import registrationRoutes from "./src/routes/registerRotes.js";
 import adminRoutes from "./src/routes/adminRoutes.js";
 import imageRoutes from "./src/routes/imageRoutes.js";
+import notificationRoutes from "./src/routes/notificationRoutes.js";
+import feedbackRoutes from "./src/routes/feedbackRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +38,8 @@ app.use("/api/organizer", organizerRoutes);
 app.use("/api/registrations", registrationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/images", imageRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 // Base route
 app.get("/", (req, res) => {

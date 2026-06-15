@@ -18,7 +18,10 @@ import {
   UserCog,
   Users,
   X,
-  Images
+  Star,
+  MessageCircle,
+  Images,
+  TrendingUp
 } from "lucide-react";
 
 const PORT = 5000;
@@ -32,19 +35,6 @@ const sidebarItems = [
   { id: "gallery", label: "Gallery", icon: Images },
   { id: "feedback", label: "Feedback & Reviews", icon: MessageSquareText },
   { id: "profile", label: "Profile & Settings", icon: UserCog },
-];
-
-const mockParticipants = [
-  { id: 1, name: "Aisha Khan", email: "aisha@email.com", event: "Tech Summit 2025", status: "confirmed", attended: false },
-  { id: 2, name: "Rohan Mehta", email: "rohan@email.com", event: "Tech Summit 2025", status: "confirmed", attended: true },
-  { id: 3, name: "Priya Sharma", email: "priya@email.com", event: "Design Workshop", status: "pending", attended: false },
-  { id: 4, name: "Arjun Das", email: "arjun@email.com", event: "Design Workshop", status: "confirmed", attended: true },
-];
-
-const mockFeedback = [
-  { id: 1, user: "Rohan Mehta", event: "Startup Meetup", rating: 5, comment: "Amazing event, very well organized!", date: "2025-06-12" },
-  { id: 2, user: "Priya Sharma", event: "Startup Meetup", rating: 4, comment: "Great networking opportunities.", date: "2025-06-11" },
-  { id: 3, user: "Arjun Das", event: "Startup Meetup", rating: 3, comment: "Good content but venue was small.", date: "2025-06-11" },
 ];
 
 // ── BADGE ──
@@ -144,25 +134,46 @@ function StatCard({ label, value, sub, accent }) {
 
 // ── DASHBOARD ──
 function Dashboard({ events = [] }) {
-  const eventCount = events.length;
-  const totalRegistrations = events.reduce((sum, e) => {
-    const reg = e.totalTickets - e.availableTickets;
-    return sum + (reg > 0 ? reg : 0);
-  }, 0);
-  const totalSeats = events.reduce((sum, e) => sum + (e.totalTickets || 0), 0);
-  const availableSeats = events.reduce((sum, e) => sum + (e.availableTickets || 0), 0);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`http://localhost:${PORT}/api/organizer/dashboard-stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setStats(res.data.stats);
+      }
+    } catch (err) {
+      console.error("Failed to fetch stats:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    fetchStats();
+  }, [events]);
+  
   const today = new Date();
   const upcomingEvents = events.filter(e => new Date(e.date) >= today);
   const completedEvents = events.filter(e => new Date(e.date) < today);
-
+  
+  if (loading) {
+    return <div className="p-5 text-center">Loading stats...</div>;
+  }
+  
   return (
     <div>
       <PageHeader title="Dashboard" sub="Welcome back. Here's what's happening." />
+      
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Events" value={eventCount.toString()} sub="All time" accent />
-        <StatCard label="Total Registrations" value={totalRegistrations.toString()} sub="Across all events" />
-        <StatCard label="Available Seats" value={availableSeats.toString()} sub="Remaining capacity" />
-        <StatCard label="Total Capacity" value={totalSeats.toString()} sub="Overall seats" />
+        <StatCard label="Total Events" value={stats?.totalEvents || events.length.toString()} sub="All time" accent />
+        <StatCard label="Total Registrations" value={stats?.totalRegistrations?.toString() || "0"} sub="Across all events" />
+        <StatCard label="Available Seats" value={stats?.availableSeats?.toString() || "0"} sub="Remaining capacity" />
+        <StatCard label="Total Capacity" value={stats?.totalCapacity?.toString() || "0"} sub="Overall seats" />
       </div>
 
       <div className="grid grid-cols-2 gap-5 mb-8">
@@ -194,8 +205,8 @@ function Dashboard({ events = [] }) {
       <div className="flex flex-col gap-2.5">
         {events.length > 0 ? (
           events.map(ev => {
-            const registered = ev.totalTickets - ev.availableTickets;
-            const pct = (registered / ev.totalTickets) * 100;
+            const registered = (stats?.totalRegistrationsPerEvent?.[ev._id]) || (ev.totalTickets - ev.availableTickets);
+            const pct = ev.totalTickets > 0 ? (registered / ev.totalTickets) * 100 : 0;
             return (
               <Card key={ev._id} className="flex items-center justify-between gap-4 !py-4 !px-5">
                 <div className="flex-1">
@@ -275,6 +286,7 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
         organizer: { name: form.organizerName },
         image: form.image || ""
       }, { headers: { Authorization: `Bearer ${token}` } });
+
       if (res.data.success) {
         await fetchEvents();
         resetForm();
@@ -282,7 +294,14 @@ function EventManagement({ events = [], setEvents, fetchEvents }) {
         setEditingEvent(null);
         alert("Event updated!");
       }
-    } catch (err) { alert(err.response?.data?.message || "Failed to update event"); }
+    } catch (err) {
+      console.error("Update error:", err);
+      if (err.response?.status === 403) {
+        alert("You don't have permission to update this event. Make sure you are the event organizer.");
+      } else {
+        alert(err.response?.data?.message || "Failed to update event");
+      }
+    }
   };
 
   const handleDelete = async (id) => {
@@ -424,14 +443,15 @@ function Registrations() {
   const handleCheckIn = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`http://localhost:${PORT}/api/registrations/checkin/${input.trim()}`, {}, {
+      const res = await axios.put(`http://localhost:${PORT}/api/registrations/checkin/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
         alert("Check-in successful!");
-        fetchRegistrations(); // Refresh the list
+        fetchRegistrations();
       }
     } catch (err) {
+      console.error("Check-in error:", err);
       alert(err.response?.data?.message || "Failed to check in");
     }
   };
@@ -648,52 +668,259 @@ function QRCheckin() {
   );
 }
 
-// ── NOTIFICATIONS ──
+// ── NOTIFICATIONS (Updated & Fixed - No Open Rate) ──
 function Notifications({ events = [] }) {
   const [msg, setMsg] = useState("");
-  const [type, setType] = useState("reminder");
+  const [title, setTitle] = useState("");
+  const [type, setType] = useState("announcement");
+  const [selectedEventId, setSelectedEventId] = useState("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sentNotifications, setSentNotifications] = useState([]);
+  const [stats, setStats] = useState(null);
 
-  function handleSend(e) {
+  const fetchSentNotifications = async (eventId) => {
+    if (!eventId) return;
+    try {
+      const token = localStorage.getItem("token");
+      console.log("Fetching notifications for event:", eventId);
+      console.log("Using token:", token);
+
+      const res = await axios.get(
+        `http://localhost:${PORT}/api/notifications/organizer/event/${eventId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log("Response:", res.data);
+
+      if (res.data.success) {
+        setSentNotifications(res.data.notifications);
+        setStats(res.data.stats);
+      }
+    } catch (err) {
+      console.error("Failed to fetch sent notifications:", err);
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+
+      if (err.response?.status === 403) {
+        alert("You don't have permission to view notifications for this event. Make sure you are the event organizer.");
+      } else if (err.response?.status === 401) {
+        alert("Please login again. Your session may have expired.");
+      } else {
+        alert(err.response?.data?.message || "Failed to fetch notifications");
+      }
+    }
+  };
+
+  const handleSend = async (e) => {
     e.preventDefault();
-    setSent(true);
-    setMsg("");
-    setTimeout(() => setSent(false), 3000);
-  }
+
+    if (!selectedEventId) {
+      alert("Please select an event");
+      return;
+    }
+
+    if (!title.trim()) {
+      alert("Please enter a title");
+      return;
+    }
+
+    if (!msg.trim()) {
+      alert("Please enter a message");
+      return;
+    }
+
+    setSending(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      console.log("Sending notification to event:", selectedEventId);
+      console.log("Payload:", { title, message: msg, type });
+
+      const res = await axios.post(
+        `http://localhost:${PORT}/api/notifications/send-to-event/${selectedEventId}`,
+        { title, message: msg, type },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      console.log("Send response:", res.data);
+
+      if (res.data.success) {
+        setSent(true);
+        setTitle("");
+        setMsg("");
+        setTimeout(() => setSent(false), 3000);
+        fetchSentNotifications(selectedEventId);
+        alert(`✅ Notification sent to ${res.data.count} attendees!`);
+      }
+    } catch (err) {
+      console.error("Send error:", err);
+      console.error("Error response:", err.response?.data);
+      console.error("Error status:", err.response?.status);
+
+      if (err.response?.status === 403) {
+        alert("You don't have permission to send notifications for this event. Make sure you are the event organizer.");
+      } else if (err.response?.status === 401) {
+        alert("Please login again. Your session may have expired.");
+        localStorage.removeItem("token");
+        window.location.href = "/organizer/login";
+      } else {
+        alert(err.response?.data?.message || "Failed to send notification");
+      }
+    } finally {
+      setSending(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedEventId) {
+      fetchSentNotifications(selectedEventId);
+    }
+  }, [selectedEventId]);
 
   return (
     <div>
-      <PageHeader title="Notifications" sub="Send reminders or announcements to participants." />
-      <Card className="max-w-[480px]">
-        <div className="flex gap-2 mb-5">
-          {["reminder", "announcement"].map(t => (
-            <button key={t} onClick={() => setType(t)}
-              className={`text-[13px] font-semibold px-4 py-2 rounded-xl cursor-pointer border-none transition-all ${type === t ? "bg-orange-500 text-white shadow-md shadow-orange-200" : "bg-orange-50 text-gray-500"}`}>
-              {t === "reminder" ? "Send Reminder" : "Send Announcement"}
-            </button>
-          ))}
-        </div>
-        <form onSubmit={handleSend} className="flex flex-col gap-3.5">
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] text-gray-400 font-semibold tracking-[0.04em]">Select Event</label>
-            <select className="border border-orange-100 rounded-xl px-3 py-[9px] text-[13px] bg-white outline-none focus:border-orange-300 transition-colors">
-              {events.map(ev => <option key={ev._id}>{ev.title}</option>)}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] text-gray-400 font-semibold tracking-[0.04em]">Message</label>
-            <textarea required rows={4} value={msg} onChange={e => setMsg(e.target.value)}
-              className="border border-orange-100 rounded-xl px-3 py-[9px] text-[13px] resize-none outline-none focus:border-orange-300 transition-colors"
-              placeholder={type === "reminder" ? "Reminder: Your event is tomorrow at 10 AM..." : "Announcement: Venue has changed to..."} />
-          </div>
-          <Btn type="submit" full>Send to All Participants</Btn>
-        </form>
-        {sent && (
-          <div className="bg-orange-50 border border-orange-200 text-orange-500 text-[13px] rounded-xl px-4 py-3 mt-3 font-semibold">
-            {type === "reminder" ? "Reminder" : "Announcement"} sent successfully.
-          </div>
-        )}
-      </Card>
+      <PageHeader title="Notifications" sub="Send announcements or reminders to event attendees." />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Send Notification Form */}
+        <Card>
+          <h3 className="text-sm font-bold text-gray-800 mb-4">Send Notification</h3>
+          <form onSubmit={handleSend} className="flex flex-col gap-3.5">
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] text-gray-400 font-semibold tracking-[0.04em]">
+                Select Event *
+              </label>
+              <select
+                required
+                value={selectedEventId}
+                onChange={(e) => setSelectedEventId(e.target.value)}
+                className="border border-orange-100 rounded-xl px-3 py-[9px] text-[13px] bg-white outline-none focus:border-orange-300 transition-colors"
+              >
+                <option value="">— Choose an event —</option>
+                {events.map((ev) => (
+                  <option key={ev._id} value={ev._id}>
+                    {ev.title} ({new Date(ev.date).toLocaleDateString()})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-2">
+              {["announcement", "reminder", "update"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setType(t)}
+                  className={`text-[13px] font-semibold px-4 py-2 rounded-xl cursor-pointer border-none transition-all ${type === t
+                    ? "bg-orange-500 text-white shadow-md shadow-orange-200"
+                    : "bg-orange-50 text-gray-500"
+                    }`}
+                >
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] text-gray-400 font-semibold tracking-[0.04em]">
+                Title *
+              </label>
+              <input
+                type="text"
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="border border-orange-100 rounded-xl px-3 py-[9px] text-[13px] outline-none focus:border-orange-300 transition-colors"
+                placeholder="e.g., Important Update: Venue Changed"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] text-gray-400 font-semibold tracking-[0.04em]">
+                Message *
+              </label>
+              <textarea
+                required
+                rows={4}
+                value={msg}
+                onChange={(e) => setMsg(e.target.value)}
+                className="border border-orange-100 rounded-xl px-3 py-[9px] text-[13px] resize-none outline-none focus:border-orange-300 transition-colors"
+                placeholder={
+                  type === "reminder"
+                    ? "Reminder: Your event is tomorrow at 10 AM. Don't forget to bring your ticket!"
+                    : "Announcement: The venue has been changed to Mumbai Convention Center, Hall B."
+                }
+              />
+            </div>
+
+            <Btn type="submit" full disabled={sending}>
+              {sending ? "Sending..." : `Send ${type} to All Attendees`}
+            </Btn>
+          </form>
+
+          {sent && (
+            <div className="bg-green-50 border border-green-200 text-green-700 text-[13px] rounded-xl px-4 py-3 mt-3 font-semibold">
+              ✓ Notification sent successfully to all attendees!
+            </div>
+          )}
+        </Card>
+
+        {/* Sent Notifications History */}
+        <Card>
+          <h3 className="text-sm font-bold text-gray-800 mb-4">
+            Sent Notifications
+          </h3>
+
+          {!selectedEventId ? (
+            <p className="text-center text-gray-400 text-[13px] py-8">
+              Select an event to view sent notifications
+            </p>
+          ) : sentNotifications.length === 0 ? (
+            <p className="text-center text-gray-400 text-[13px] py-8">
+              No notifications sent for this event yet
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto">
+              {sentNotifications.map((notif) => (
+                <div key={notif._id} className="border border-orange-100 rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold uppercase bg-orange-50 text-orange-500 px-2 py-0.5 rounded">
+                      {notif.type}
+                    </span>
+                    <span className="text-[10px] text-gray-400">
+                      {new Date(notif.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="font-semibold text-[13px] text-gray-800 m-0">
+                    {notif.title}
+                  </p>
+                  <p className="text-[11px] text-gray-500 mt-1 m-0">
+                    {notif.message}
+                  </p>
+                  <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-400">
+                    <span>📨 Sent to {notif.isBroadcast ? "all attendees" : "1 attendee"}</span>
+                    <span>👁️ {notif.isRead ? "Read" : "Unread"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Stats Section without Open Rate */}
+          {stats && stats.totalSent > 0 && (
+            <div className="mt-4 pt-3 border-t border-orange-100 grid grid-cols-2 gap-2 text-center">
+              <div>
+                <div className="text-lg font-bold text-orange-600">{stats.totalSent}</div>
+                <div className="text-[10px] text-gray-400">Total Sent</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-emerald-600">{stats.uniqueRecipients}</div>
+                <div className="text-[10px] text-gray-400">Recipients</div>
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }
@@ -827,25 +1054,272 @@ function Gallery({ events = [] }) {
   );
 }
 
-// ── FEEDBACK ──
+// ── FEEDBACK (Updated with real data) ──
 function Feedback() {
-  return (
-    <div>
-      <PageHeader title="Feedback & Reviews" sub="See what participants said about your events." />
-      <div className="flex flex-col gap-3">
-        {mockFeedback.map(f => (
-          <Card key={f.id}>
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <p className="font-bold text-sm text-gray-800 m-0">{f.user}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{f.event} · {f.date}</p>
-              </div>
-              <Stars rating={f.rating} />
-            </div>
-            <p className="text-[13px] text-gray-500 m-0 italic">"{f.comment}"</p>
-          </Card>
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedEventFilter, setSelectedEventFilter] = useState("");
+  const [ratingFilter, setRatingFilter] = useState("");
+  const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [responseText, setResponseText] = useState("");
+  const [events, setEvents] = useState([]);
+
+  const fetchFeedbacks = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      let url = `http://localhost:${PORT}/api/feedback/organizer/all`;
+      const params = new URLSearchParams();
+      if (selectedEventFilter) params.append("eventId", selectedEventFilter);
+      if (ratingFilter) params.append("rating", ratingFilter);
+      if (params.toString()) url += `?${params.toString()}`;
+
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.success) {
+        setFeedbacks(res.data.feedbacks);
+        setStats(res.data.stats);
+      }
+    } catch (err) {
+      console.error("Fetch feedbacks error:", err);
+      alert("Failed to load feedbacks");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`http://localhost:${PORT}/api/events/getMyEvents`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setEvents(res.data.events);
+      }
+    } catch (err) {
+      console.error("Fetch events error:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchFeedbacks();
+    fetchEvents();
+  }, [selectedEventFilter, ratingFilter]);
+
+  const handleRespond = async (feedbackId) => {
+    if (!responseText.trim()) {
+      alert("Please enter a response");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `http://localhost:${PORT}/api/feedback/organizer/respond/${feedbackId}`,
+        { response: responseText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Response added!");
+      setSelectedFeedback(null);
+      setResponseText("");
+      fetchFeedbacks();
+    } catch (err) {
+      alert("Failed to add response");
+    }
+  };
+
+  const handleTogglePublish = async (feedbackId, currentStatus) => {
+    try {
+      const token = localStorage.getItem("token");
+      const endpoint = currentStatus ? "hide" : "publish";
+      await axios.put(
+        `http://localhost:${PORT}/api/feedback/organizer/${endpoint}/${feedbackId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(currentStatus ? "Feedback hidden" : "Feedback published");
+      fetchFeedbacks();
+    } catch (err) {
+      alert("Failed to update status");
+    }
+  };
+
+  const StarDisplay = ({ rating }) => {
+    return (
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            size={14}
+            className={star <= rating ? "fill-orange-500 text-orange-500" : "text-gray-300"}
+          />
         ))}
       </div>
+    );
+  };
+
+  if (loading) {
+    return <div className="p-5 text-center">Loading feedbacks...</div>;
+  }
+
+  return (
+    <div>
+      <PageHeader
+        title="Feedback & Reviews"
+        sub="See what participants said about your events and respond to them."
+      />
+
+      {/* Stats Cards */}
+      {stats && (
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-xl p-4 border border-orange-100">
+            <div className="text-2xl font-bold text-orange-600">{stats.total}</div>
+            <div className="text-xs text-gray-400">Total Feedbacks</div>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-orange-100">
+            <div className="text-2xl font-bold text-emerald-600">{stats.averageRating}</div>
+            <div className="text-xs text-gray-400">Average Rating</div>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-orange-100">
+            <div className="text-2xl font-bold text-blue-600">{stats.responded}</div>
+            <div className="text-xs text-gray-400">Responded</div>
+          </div>
+          <div className="bg-white rounded-xl p-4 border border-orange-100">
+            <div className="text-2xl font-bold text-amber-600">{stats.notResponded}</div>
+            <div className="text-xs text-gray-400">Pending Response</div>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="flex gap-3 mb-5">
+        <select
+          value={selectedEventFilter}
+          onChange={(e) => setSelectedEventFilter(e.target.value)}
+          className="border border-orange-100 rounded-xl px-3 py-2 text-[13px] bg-white outline-none"
+        >
+          <option value="">All Events</option>
+          {events.map(event => (
+            <option key={event._id} value={event._id}>{event.title}</option>
+          ))}
+        </select>
+
+        <select
+          value={ratingFilter}
+          onChange={(e) => setRatingFilter(e.target.value)}
+          className="border border-orange-100 rounded-xl px-3 py-2 text-[13px] bg-white outline-none"
+        >
+          <option value="">All Ratings</option>
+          <option value="5">5 Stars</option>
+          <option value="4">4 Stars</option>
+          <option value="3">3 Stars</option>
+          <option value="2">2 Stars</option>
+          <option value="1">1 Star</option>
+        </select>
+      </div>
+
+      {/* Feedback List */}
+      {feedbacks.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-orange-100 p-12 text-center">
+          <MessageCircle size={48} className="text-slate-300 mx-auto mb-4" />
+          <p className="text-gray-400">No feedback received yet.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {feedbacks.map((fb) => (
+            <Card key={fb._id}>
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+                    <span className="font-semibold text-gray-800">{fb.audienceName}</span>
+                    <StarDisplay rating={fb.rating} />
+                    <span className="text-[11px] text-gray-400">
+                      {new Date(fb.createdAt).toLocaleDateString()}
+                    </span>
+                    {!fb.isPublished && (
+                      <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded">Hidden</span>
+                    )}
+                  </div>
+                  <p className="text-[13px] text-gray-600 mb-2">{fb.comment}</p>
+                  <p className="text-[11px] text-gray-400">Event: {fb.eventTitle}</p>
+
+                  {fb.organizerResponded && (
+                    <div className="mt-3 bg-orange-50 rounded-lg p-3">
+                      <p className="text-[11px] font-semibold text-orange-600 mb-1">Your Response:</p>
+                      <p className="text-[13px] text-gray-700">{fb.organizerResponse}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2 ml-4">
+                  <button
+                    onClick={() => {
+                      setSelectedFeedback(fb);
+                      setResponseText(fb.organizerResponse || "");
+                    }}
+                    className="px-3 py-1.5 text-[11px] bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100"
+                  >
+                    {fb.organizerResponded ? "Edit Response" : "Respond"}
+                  </button>
+                  <button
+                    onClick={() => handleTogglePublish(fb._id, fb.isPublished)}
+                    className={`px-3 py-1.5 text-[11px] rounded-lg ${fb.isPublished
+                      ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                      }`}
+                  >
+                    {fb.isPublished ? "Hide" : "Publish"}
+                  </button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Response Modal */}
+      {selectedFeedback && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">
+              Respond to {selectedFeedback.audienceName}
+            </h3>
+            <div className="mb-4 p-3 bg-orange-50 rounded-lg">
+              <p className="text-[11px] text-gray-500 mb-1">Original Feedback:</p>
+              <p className="text-sm text-gray-700">{selectedFeedback.comment}</p>
+              <div className="flex gap-1 mt-2">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <Star key={star} size={14} className={star <= selectedFeedback.rating ? "fill-orange-500" : "text-gray-300"} />
+                ))}
+              </div>
+            </div>
+            <textarea
+              rows={4}
+              value={responseText}
+              onChange={(e) => setResponseText(e.target.value)}
+              className="w-full border border-orange-100 rounded-xl px-3 py-2 text-[13px] resize-none focus:outline-none focus:border-orange-300"
+              placeholder="Write your response here..."
+            />
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => handleRespond(selectedFeedback._id)}
+                className="flex-1 bg-orange-500 text-white py-2 rounded-xl hover:bg-orange-600"
+              >
+                Send Response
+              </button>
+              <button
+                onClick={() => setSelectedFeedback(null)}
+                className="flex-1 border border-slate-200 py-2 rounded-xl hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

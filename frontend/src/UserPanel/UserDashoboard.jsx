@@ -4,20 +4,22 @@ import BrowseEvents from "./BrowseEvents.jsx";
 import Tickets from "./Tickets.jsx";
 import Gallery from "./Gallery.jsx";
 import RegisteredEvents from "./RegisteredEvents.jsx";
+import NotificationPage from "./AudienceNotificationsPanel.jsx";
+import FeedbackPage from "./AudienceFeedback.jsx";
 
-const myEvents = ["Registered Events","Upcoming Events", "Completed Events"];
+const myEvents = ["Registered Events", "Upcoming Events", "Completed Events"];
 
 export default function UserDashboard({ onBackHome }) {
-  const [activeLink, setActiveLink]         = useState("browse");
-  const [myEventsOpen, setMyEventsOpen]     = useState(false);
-  const [profileOpen, setProfileOpen]       = useState(false);
-  const profileRef                          = useRef(null);
-  const myEventsRef                         = useRef(null);
+  const [activeLink, setActiveLink] = useState("browse");
+  const [myEventsOpen, setMyEventsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+  const myEventsRef = useRef(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (profileRef.current && !profileRef.current.contains(e.target))  setProfileOpen(false);
+      if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
       if (myEventsRef.current && !myEventsRef.current.contains(e.target)) setMyEventsOpen(false);
     };
     document.addEventListener("mousedown", handler);
@@ -31,13 +33,15 @@ export default function UserDashboard({ onBackHome }) {
 
   const renderContent = () => {
     switch (activeLink) {
-      case "browse":           return <BrowseEvents />;
-      case "tickets":          return <Tickets />;
-      case "gallery":          return <Gallery />;
+      case "browse": return <BrowseEvents />;
+      case "tickets": return <Tickets />;
+      case "gallery": return <Gallery />;
       case "Registered Events": return <RegisteredEvents />;
-      case "Upcoming Events":  return <BrowseEvents filterType="upcoming" />;
+      case "Upcoming Events": return <BrowseEvents filterType="upcoming" />;
       case "Completed Events": return <BrowseEvents filterType="completed" />;
-      default:                 return <BrowseEvents />;
+      case "Notications": return <NotificationPage />;
+      case "Feedback": return <FeedbackPage />;
+      default: return <BrowseEvents />;
     }
   };
 
@@ -45,11 +49,10 @@ export default function UserDashboard({ onBackHome }) {
     <a
       href={`#${key}`}
       onClick={(e) => { e.preventDefault(); setActiveLink(key); }}
-      className={`text-sm font-semibold transition-colors no-underline pb-0.5 ${
-        activeLink === key
+      className={`text-sm font-semibold transition-colors no-underline pb-0.5 ${activeLink === key
           ? "text-orange-500 border-b-2 border-orange-500"
           : "text-stone-600 hover:text-orange-500"
-      }`}
+        }`}
     >
       {label}
     </a>
@@ -88,11 +91,10 @@ export default function UserDashboard({ onBackHome }) {
             <button
               type="button"
               onClick={() => setMyEventsOpen((o) => !o)}
-              className={`flex items-center gap-1.5 text-sm font-semibold transition-colors border-0 bg-transparent cursor-pointer ${
-                myEvents.includes(activeLink)
+              className={`flex items-center gap-1.5 text-sm font-semibold transition-colors border-0 bg-transparent cursor-pointer ${myEvents.includes(activeLink)
                   ? "text-orange-500"
                   : "text-stone-600 hover:text-orange-500"
-              }`}
+                }`}
             >
               My Events <ChevronDown size={15} className={`transition-transform ${myEventsOpen ? "rotate-180" : ""}`} />
             </button>
@@ -104,11 +106,10 @@ export default function UserDashboard({ onBackHome }) {
                     key={event}
                     href={`#${event}`}
                     onClick={(e) => { e.preventDefault(); setActiveLink(event); setMyEventsOpen(false); }}
-                    className={`block px-4 py-2 text-sm no-underline transition-colors ${
-                      activeLink === event
+                    className={`block px-4 py-2 text-sm no-underline transition-colors ${activeLink === event
                         ? "text-orange-500 bg-orange-50 font-semibold"
                         : "text-stone-600 hover:bg-stone-50 hover:text-orange-500"
-                    }`}
+                      }`}
                   >
                     {event}
                   </a>
@@ -119,6 +120,8 @@ export default function UserDashboard({ onBackHome }) {
 
           {navLink("tickets", "Tickets")}
           {navLink("gallery", "Gallery")}
+          {navLink("Notications", "Notifications")}
+          {navLink("Feedback", "Feedback")}
 
           {/* Profile + logout */}
           <div ref={profileRef} className="relative">

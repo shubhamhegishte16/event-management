@@ -7,6 +7,7 @@ import OrganizerSignup from "./pages/organizerSignup";
 import UserDashboard from "./UserPanel/UserDashoboard";
 import OrganizerPanel from "./OrganizerPanel/OrganizerPanel";
 import AdminDashboard from "./AdminPanel/AdminDashboard";
+import Notification from "./UserPanel/AudienceNotificationsPanel.jsx";
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ function AppRoutes() {
       <Route path="/userDashboard" element={<UserDashboard onBackHome={() => navigate("/login")} />} />
       <Route path="/organizerpanel" element={<OrganizerPanel />} />
       <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/notifications" element={<Notification />} /> 
     </Routes>
   );
 }

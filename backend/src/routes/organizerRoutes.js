@@ -2,7 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import Organizer from "../models/Organizer.js";
 import protectOrganizer from "../middleware/organizerAuthMiddleware.js";
-import { getOrganizerProfile } from "../controllers/organizerController.js";
+import { getOrganizerProfile, getOrganizerStats } from "../controllers/organizerController.js";
 
 const router = express.Router();
 
@@ -196,6 +196,7 @@ router.put("/update-profile", protectOrganizer, async (req, res) => {
 
 
 router.get("/profile", protectOrganizer, getOrganizerProfile);
+router.get("/dashboard-stats", protectOrganizer, getOrganizerStats);
 
 
 export default router;

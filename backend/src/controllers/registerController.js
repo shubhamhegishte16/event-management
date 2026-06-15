@@ -53,8 +53,9 @@ export const registerForEvent = async (req, res) => {
 
     const registration = await Registration.create({
       event: eventId,
-      attendeeName,
-      attendeeEmail,
+      attendeeId: req.user.id, 
+      attendeeName: req.user.name,
+      attendeeEmail: req.user.email,
       ticketsBooked,
     });
 
@@ -274,14 +275,14 @@ export const getOrganizerRegistrations = async (req, res) => {
         { createdBy: req.user.id }
       ]
     });
-    
+
     const eventIds = events.map(e => e._id);
-    
+
     // 2. Find all registrations for these events
     const registrations = await Registration.find({
       event: { $in: eventIds }
     }).populate("event");
-    
+
     res.status(200).json({
       success: true,
       registrations,

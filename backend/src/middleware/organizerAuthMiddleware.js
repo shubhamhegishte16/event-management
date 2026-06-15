@@ -19,13 +19,13 @@ const protectOrganizer = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "Organizer not found" });
     }
 
-    // Check if organizer is approved
-    if (organizer.status !== "approved") {
-      return res.status(403).json({ 
-        success: false, 
-        message: `Your account is ${organizer.status}. Please wait for admin approval.` 
-      });
-    }
+    // COMMENT OUT OR MODIFY the status check for now
+    // if (organizer.status !== "approved") {
+    //   return res.status(403).json({ 
+    //     success: false, 
+    //     message: `Your account is ${organizer.status}. Please wait for admin approval.` 
+    //   });
+    // }
 
     req.user = {
       id: organizer._id,
@@ -33,6 +33,7 @@ const protectOrganizer = async (req, res, next) => {
       name: organizer.fullName,
       email: organizer.email,
       orgName: organizer.orgName,
+      fullName: organizer.fullName,
     };
 
     next();

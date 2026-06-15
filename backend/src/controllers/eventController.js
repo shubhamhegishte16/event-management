@@ -4,9 +4,9 @@ export const createEvent = async (req, res) => {
   try {
     const eventData = {
       ...req.body,
-      organizerId: req.user.id,
+      organizerId: req.user.id,  // ← Make sure this is set
       organizer: {
-        id: req.user.id,
+        id: req.user.id,  // ← Also set id inside organizer object
         name: req.user.orgName || req.user.name,
       },
       status: "pending",
@@ -82,8 +82,18 @@ export const updateEvent = async (req, res) => {
       return res.status(404).json({ success: false, message: "Event not found" });
     }
     
-    if (event.organizer.id !== req.user.id) {
-      return res.status(403).json({ success: false, message: "You can only update your own events" });
+    // More flexible ownership check
+    const isOwner = 
+      (event.organizerId && event.organizerId.toString() === req.user.id.toString()) ||
+      (event.organizer?.id && event.organizer.id.toString() === req.user.id.toString()) ||
+      (event.createdBy && event.createdBy.toString() === req.user.id.toString());
+    
+    if (!isOwner) {
+      console.log("Permission denied. Event owner:", event.organizerId, "Request user:", req.user.id);
+      return res.status(403).json({ 
+        success: false, 
+        message: "You can only update your own events" 
+      });
     }
     
     const updatedEvent = await Event.findByIdAndUpdate(
@@ -110,8 +120,17 @@ export const deleteEvent = async (req, res) => {
       return res.status(404).json({ success: false, message: "Event not found" });
     }
     
-    if (event.organizer.id !== req.user.id) {
-      return res.status(403).json({ success: false, message: "You can only delete your own events" });
+    // More flexible ownership check
+    const isOwner = 
+      (event.organizerId && event.organizerId.toString() === req.user.id.toString()) ||
+      (event.organizer?.id && event.organizer.id.toString() === req.user.id.toString()) ||
+      (event.createdBy && event.createdBy.toString() === req.user.id.toString());
+    
+    if (!isOwner) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "You can only delete your own events" 
+      });
     }
     
     await Event.findByIdAndDelete(req.params.id);

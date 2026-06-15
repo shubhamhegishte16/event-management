@@ -64,7 +64,7 @@ export const checkInAttendee = async (req, res) => {
     try {
       const parsed = JSON.parse(decodeURIComponent(id));
       if (parsed.registrationId) id = parsed.registrationId;
-    } catch { }
+    } catch {}
 
     const registration = await Registration.findById(id).populate("event");
     if (!registration) return res.status(404).json({ success: false, message: "Registration not found" });
@@ -170,8 +170,7 @@ export const cancelRegistration = async (req, res) => {
       await event.save();
     }
 
-    registration.status = "cancelled";
-    await registration.save();
+    await Registration.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
       success: true,

@@ -3,12 +3,11 @@ import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import QRCode from "react-qr-code";
 
-const TABS = ["Upcoming", "Past", "Cancelled"];
+const TABS = ["Upcoming", "Past"];
 
 const statusStyles = {
   Upcoming: "bg-orange-50 text-orange-500 border border-orange-200",
-  Past: "bg-stone-100 text-stone-500 border border-stone-200",
-  Cancelled: "bg-red-50 text-red-400 border border-red-200",
+  Past: "bg-stone-100 text-stone-500 border border-stone-200"
 };
 
 const categoryColors = {
@@ -70,6 +69,9 @@ export default function Tickets() {
           const data = await res.json();
 
           if (data.success) {
+
+            console.log("REGISTRATIONS:", data.registrations);
+
             const expandedTickets = data.registrations.flatMap((r) =>
               Array.from(
                 { length: r.ticketsBooked || 1 },
@@ -101,12 +103,11 @@ export default function Tickets() {
   }, [id]);
 
   const getTicketStatus = (ticket) => {
-    if (ticket.status === "cancelled") return "Cancelled";
-    if (!ticket.event) return "Cancelled";
-    if (ticket.paymentStatus === "failed") return "Cancelled";
-    if (!ticket.event?.date) return "Cancelled";
+    if (!ticket.event?.date) return "Past";
+
     const eventDate = new Date(ticket.event.date);
     eventDate.setHours(23, 59, 59, 999);
+
     return eventDate >= new Date() ? "Upcoming" : "Past";
   };
 

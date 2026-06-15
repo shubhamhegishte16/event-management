@@ -325,4 +325,5 @@ export default function BrowseEvents({ filterType = "browse" }) {
       )}
     </>
   );
-}
+} 
+//made this Responsive

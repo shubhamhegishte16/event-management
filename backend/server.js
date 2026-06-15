@@ -3,10 +3,11 @@ dns.setDefaultResultOrder("ipv4first");
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 import express from "express";
-import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+
 import startServer from "./src/config/db.js";
+
 import authRoutes from "./src/routes/auth.js";
 import ticketRoutes from "./src/routes/tickets.js";
 import eventRoutes from "./src/routes/eventRoute.js";
@@ -23,11 +24,29 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Allowed frontend URLs
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://nexeventmanagement.vercel.app",
+];
+
 // Middleware
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (Postman, mobile apps, etc.)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: "5mb" }));
 
 // Routes
@@ -46,6 +65,7 @@ app.get("/", (req, res) => {
   res.send("Event Management System API is running...");
 });
 
+// Start DB and server
 await startServer();
 
 app.listen(PORT, () => {
